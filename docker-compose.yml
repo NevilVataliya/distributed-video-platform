@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # 1. The Database (For Core API)
+  mongodb:
+    image: mongo:latest
+    container_name: hexanodes_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  # 2. The Message Broker (For Video Processing Queue)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: hexanodes_rabbitmq
+    ports:
+      - "5672:5672"   # Main port for your Node/Python code to connect
+      - "15672:15672" # Web UI Dashboard
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+
+  # 3. Distributed Object Storage (For Video Files)
+  minio:
+    image: minio/minio
+    container_name: hexanodes_minio
+    ports:
+      - "9000:9000" # API port for your code to upload/download
+      - "9001:9001" # Web UI Dashboard
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  # 4. Live Streaming Server (For OBS Studio)
+  nginx-rtmp:
+    image: tiangolo/nginx-rtmp
+    container_name: hexanodes_rtmp
+    ports:
+      - "1935:1935" # Standard RTMP port for OBS to stream to
+    restart: unless-stopped
+
+# Named volumes so your data doesn't disappear when you restart Docker
+volumes:
+  mongodb_data:
+  minio_data:
