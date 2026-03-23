@@ -1,0 +1,34 @@
+hexanode-video-platform/
+│
+├── docker-compose.yml       <-- [Nevil & Ravi] The Infrastructure (MinIO, RabbitMQ, Mongo, Origin/Edge Nginx)
+├── README.md                <-- [All] Setup instructions & architecture docs
+│
+├── frontend/                <-- [Palak's Domain]
+│   ├── package.json         (React + Vite)
+│   └── src/
+│       ├── components/      (VideoPlayer.jsx, Navbar.jsx, PostCard.jsx)
+│       ├── pages/           (UploadPage.jsx, LivePage.jsx, FeedPage.jsx)
+│       └── App.jsx          (Main routing)
+│
+├── backend-api/             <-- [Prankit's Domain + Ravi's Stream Logic]
+│   ├── package.json         (Node.js + Express)
+│   ├── .env                 (Database URIs, Ports)
+│   └── src/
+│       ├── controllers/     (Prankit: Upload logic | Ravi: Stream Key Auth logic)
+│       ├── models/          (MongoDB schemas for Users, Videos, StreamKeys)
+│       ├── routes/          (API endpoint definitions)
+│       ├── middlewares/     (Auth tokens, error handling)
+│       ├── index.js         (Main server entry point)
+│       └── utils/           <-- 📍 [Nevil & Parth's Domain: System Integration]
+│           ├── minio.js     (Your code: uploadToStorage function)
+│           └── rabbitmq.js  (Your code: publishToQueue function)
+│
+└── worker-node/             <-- [Vasu's Domain]
+    ├── package.json         (Node.js + fluent-ffmpeg)
+    ├── .env                 (MinIO & RabbitMQ connection strings)
+    └── src/
+        ├── services/        (Vasu: The actual FFmpeg watermarking & chunking logic)
+        ├── index.js         (Vasu: The main file that keeps the worker alive)
+        └── utils/           <-- 📍 [Nevil & Parth's Domain: System Integration]
+            ├── minio.js     (Your code: downloadRawVideo, uploadChunks functions)
+            └── rabbitmq.js  (Your code: listenToQueue function)
