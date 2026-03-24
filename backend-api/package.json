@@ -14,9 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "crypto": "^1.0.1",
-    "multer": "^2.1.1"
-  "type": "commonjs",
-  "dependencies": {
+    "multer": "^2.1.1",
     "amqplib": "^0.10.9",
     "minio": "^8.0.7"
   }
