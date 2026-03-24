@@ -3,6 +3,7 @@ import amqp from "amqplib";
 const RABBIT_URL = "amqp://localhost";
 
 export const publishToQueue = async (queueName, dataObject) => {
+  console.log("rabbitmq.js")
   const connection = await amqp.connect(RABBIT_URL);
   const channel = await connection.createChannel();
 
@@ -19,3 +20,4 @@ export const publishToQueue = async (queueName, dataObject) => {
   await channel.close();
   await connection.close();
 };
+
