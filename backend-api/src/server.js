@@ -25,8 +25,8 @@ import videoRouter from "./routes/video.route.js"
 
 app.use("/api/videos",videoRouter)
 
-import {Video} from "./models/Video.model.js";
-await Video.create({ title: "test video" });
+// import {Video} from "./models/Video.model.js";
+// await Video.create({ title: "test video" });
 
 app.get("/",(req,res)=>{
     res.send("server is ready")

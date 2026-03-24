@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import crypto from "crypto";
 // import { uploadToMinIO } from "../utils/minio.js";
 // import { publishToQueue } from "../utils/rabbitmq.js";
+import { publishToQueue } from "../utils/rabbitmq.js";
 
 const uploadVideo = asyncHandler(async(req , res )=>{
     const file = req.file;
@@ -23,10 +24,10 @@ const uploadVideo = asyncHandler(async(req , res )=>{
       streamKey: crypto.randomBytes(8).toString("hex"),
     });
 
-    // await publishToQueue({
-    //   videoId: video._id.toString(),
-    //   objectName,
-    // });
+    await publishToQueue("video-processing",{
+      videoId: video._id.toString(),
+      objectName,
+    });
 
     return res.status(200).json({
       message: "Processing",
