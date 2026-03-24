@@ -20,3 +20,4 @@ export const publishToQueue = async (queueName, dataObject) => {
   await channel.close();
   await connection.close();
 };
+

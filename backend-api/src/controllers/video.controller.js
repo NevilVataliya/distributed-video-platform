@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import crypto from "crypto";
 // import { uploadToMinIO } from "../utils/minio.js";
-// import { publishToQueue } from "../utils/rabbitmq.js";
+
 import { publishToQueue } from "../utils/rabbitmq.js";
 
 const uploadVideo = asyncHandler(async(req , res )=>{
