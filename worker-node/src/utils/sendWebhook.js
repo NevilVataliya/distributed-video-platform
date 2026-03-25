@@ -1,0 +1,16 @@
+import axios from "axios";
+
+export const sendWebhook = async (videoId) => {
+    const hlsUrl = `http://localhost:9000/processed-videos/${videoId}/playlist.m3u8`;
+    try {
+        const response =
+            await axios.post("http://localhost:3000/api/videos/webhook", {
+                videoId,
+                status: "Ready",
+                hlsUrl
+            });
+        console.log("Webhook sent successfully:", response.data);
+    } catch (error) {
+        console.error("Error sending webhook:", error);
+    }
+};

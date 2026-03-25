@@ -1,6 +1,7 @@
 import { downloadRawVideo ,uploadHLSFolder} from "../utils/minio.js";
 import path from "path";
 import { chunkVideoWithWatermark } from "./chunkVideo.js";
+import { sendWebhook } from "../utils/sendWebhook.js";
 
 
 const downloadRawVideoAndSave = async (name, localPath) => {
@@ -21,7 +22,7 @@ const processVideo = async (data, ack, nack) => {
 
     
     await downloadRawVideoAndSave(objectName, localPath);
-    console.log(`✅ Downloaded: ${localPath}`);
+    console.log(` Downloaded: ${localPath}`);
 
     
     await chunkVideoWithWatermark(localPath, path.join("temp", "output"));
@@ -32,13 +33,15 @@ const processVideo = async (data, ack, nack) => {
       "processed-videos",
       objectName
     );
-
+    
     console.log(` Finished processing ${objectName}`);
+
+    await sendWebhook(videoId);
 
     ack(); 
   } catch (error) {
     console.error(" Error processing:", error);
-    nack(); //fail
+    nack(); 
   }
 };
 export { processVideo };

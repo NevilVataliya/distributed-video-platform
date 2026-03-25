@@ -31,7 +31,7 @@ const prepareOutputDirectory = (outputDir) => {
 
 const chunkVideo = (inputPath, outputDir) => {
     return new Promise((resolve, reject) => {
-        const m3u8Path = path.join(outputDir, "index.m3u8");
+        const m3u8Path = path.join(outputDir, "playlist.m3u8");
 
         const segmentPath = path.join(outputDir, "%03d.ts");
         const safeText = WATERMARK_TEXT.replace(/'/g, "\\'").replace(/:/g, "\\:");
@@ -60,21 +60,20 @@ const chunkVideo = (inputPath, outputDir) => {
         ffmpeg.stderr.on("data", (data) => {
             const line = data.toString();
 
-            console.log(line); // print everything
+            console.log(line); 
 
             if (line.includes("time=")) {
                 const match = line.match(/time=(\S+)/);
                 if (match) process.stdout.write(`\r    Encoding at ${match[1]}...  `);
             }
         });
-        // we will ignore the stdout and stderr error because ffmpeg will output some warning and info in the stderr and stdout but it will not affect the chunking process, so we will just log it and ignore it
         ffmpeg.stderr.on("error", () => { });
         ffmpeg.stdout.on("error", () => { });
 
         ffmpeg.on("close", (code) => {
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             if (code === 0) {
-                console.log(`\n\n✅  FFmpeg done in ${elapsed}s`);
+                console.log(`\n\n FFmpeg done in ${elapsed}s`);
                 resolve();
             } else {
                 reject(new Error(`FFmpeg exited with code ${code}`));
