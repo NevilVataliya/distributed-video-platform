@@ -16,7 +16,7 @@ const uploadVideo = asyncHandler(async(req , res )=>{
 
 
     const objectName = `${Date.now()}-${file.originalname}`;
-    await uploadToMinIO("raw-videos", objectName, file.buffer);
+    await uploadToMinIO(file.buffer, objectName);
 
 
     const video = await Video.create({
