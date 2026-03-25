@@ -45,6 +45,10 @@ const webhookUpdate= asyncHandler(async(req,res)=>{
   video.status = status
   video.hlsUrl=hlsUrl
   const updatedV = await video.save();
+
+  // console.log("Webhook received for videoId:", videoId, "Status:", status, "HLS URL:", hlsUrl);
+  // console.log("Updated video document:", updatedV);
+
   if(!updatedV){
     throw new ApiError(500,"Unable to update status and hls ")
   }

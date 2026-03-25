@@ -15,7 +15,7 @@ const videoSchema = mongoose.Schema(
             enum:["Processing","Ready"],
             default:"Processing"
         },
-        hslUrl:{
+        hlsUrl:{
             type:String,
             default:""
         },
