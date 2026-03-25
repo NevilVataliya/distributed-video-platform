@@ -5,11 +5,11 @@ import path from "path";
 
 const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || "localhost";
 const MINIO_PORT = parseInt(process.env.MINIO_PORT || "9000", 10);
-const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true";
+const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true"||false;
 const MINIO_ACCESS_KEY =
-	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "minioadmin";
+	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "admin";
 const MINIO_SECRET_KEY =
-	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "minioadmin";
+	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "password123";
 
 const RAW_VIDEOS_BUCKET = "raw-videos";
 
