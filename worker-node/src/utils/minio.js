@@ -12,6 +12,7 @@ const MINIO_SECRET_KEY =
 	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "password123";
 
 const RAW_VIDEOS_BUCKET = "raw-videos";
+const PROCESSED_VIDEOS_BUCKET = "processed-videos";
 
 const minioClient = new Client({
 	endPoint: MINIO_ENDPOINT,
@@ -25,6 +26,24 @@ const ensureBucketExists = async (bucketName) => {
 	const exists = await minioClient.bucketExists(bucketName);
 	if (!exists) {
 		await minioClient.makeBucket(bucketName, "us-east-1");
+		console.log(`[MinIO] Created bucket: ${bucketName}`);
+
+		// AUTOMATION: If it's the processed videos bucket, make it public immediately
+		if (bucketName === PROCESSED_VIDEOS_BUCKET) {
+			const publicReadPolicy = {
+				Version: "2012-10-17",
+				Statement: [
+					{
+						Effect: "Allow",
+						Principal: { AWS: ["*"] },
+						Action: ["s3:GetObject"],
+						Resource: [`arn:aws:s3:::${bucketName}/*`],
+					},
+				],
+			};
+			await minioClient.setBucketPolicy(bucketName, JSON.stringify(publicReadPolicy));
+			console.log(`[MinIO] Set Public Read policy on bucket: ${bucketName}`);
+		}
 	}
 };
 
