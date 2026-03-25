@@ -26,7 +26,7 @@ const processVideo = async (data, ack, nack) => {
     console.log(` Downloaded: ${localPath}`);
 
     
-    await chunkVideoWithWatermark(localPath, path.join("temp", "output"));
+    await chunkVideoWithWatermark(localPath, path.join("temp", "output"), videoId);
 
     
     await uploadHLSFolder(

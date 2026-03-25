@@ -45,7 +45,7 @@ const prepareOutputDirectory = (outputDir) => {
     console.log(`Output directory ${outputDir} created.`);
 }
 
-const chunkVideo = (inputPath, outputDir) => {
+const chunkVideo = (inputPath, outputDir, videoId) => {
     return new Promise((resolve, reject) => {
         const m3u8Path = path.join(outputDir, "playlist.m3u8");
 
@@ -107,12 +107,12 @@ const chunkVideo = (inputPath, outputDir) => {
 }
 
 
-const chunkVideoWithWatermark = async (inputPath, outputDir) => {
+const chunkVideoWithWatermark = async (inputPath, outputDir, videoId) => {
     try {
         checkInputVideo(inputPath);
         prepareOutputDirectory(outputDir);
         await checkFFmpeg();
-        await chunkVideo(inputPath, outputDir);
+        await chunkVideo(inputPath, outputDir, videoId);
         console.log(`Video chunked and uploaded successfully.`);
     } catch (error) {
         console.error("Error in chunking video:", error);
