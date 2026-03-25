@@ -2,7 +2,7 @@ import { Video } from "../models/Video.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import crypto from "crypto";
-// import { uploadToMinIO } from "../utils/minio.js";
+import { uploadToMinIO } from "../utils/minio.js";
 
 import { publishToQueue } from "../utils/rabbitmq.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -16,7 +16,7 @@ const uploadVideo = asyncHandler(async(req , res )=>{
 
 
     const objectName = `${Date.now()}-${file.originalname}`;
-    // await uploadToMinIO("raw-videos", objectName, file.buffer);
+    await uploadToMinIO("raw-videos", objectName, file.buffer);
 
 
     const video = await Video.create({
