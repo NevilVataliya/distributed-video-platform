@@ -1,6 +1,7 @@
 import { downloadRawVideo ,uploadHLSFolder} from "../utils/minio.js";
 import path from "path";
-import { chunkVideoWithWatermark } from "./chunkVideo.js";
+import fs from "fs";
+import { chunkVideoWithWatermark, clearTempFolder } from "./chunkVideo.js";
 import { sendWebhook } from "../utils/sendWebhook.js";
 
 
@@ -31,12 +32,15 @@ const processVideo = async (data, ack, nack) => {
     await uploadHLSFolder(
       path.join("temp", "output"),
       "processed-videos",
-      objectName
+      videoId
     );
     
     console.log(` Finished processing ${objectName}`);
 
     await sendWebhook(videoId);
+    
+    await clearTempFolder();
+
 
     ack(); 
   } catch (error) {

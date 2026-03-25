@@ -5,9 +5,9 @@ const MINIO_ENDPOINT = "localhost";
 const MINIO_PORT = 9000;
 const MINIO_USE_SSL = false;
 const MINIO_ACCESS_KEY =
-	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "minioadmin";
+	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "admin";
 const MINIO_SECRET_KEY =
-	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "minioadmin";
+	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "password123";
 
 const RAW_VIDEOS_BUCKET = "raw-videos";
 console.log(MINIO_ACCESS_KEY)

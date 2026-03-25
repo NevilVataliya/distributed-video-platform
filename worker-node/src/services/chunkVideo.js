@@ -1,10 +1,26 @@
 import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
+import axios from "axios";
 
 const CHUNK_SECONDS = 6;
 const WATERMARK_TEXT = "Sample Watermark";
+const fsPromises = fs.promises;
 
+const clearTempFolder = async () => {
+    try {
+        const files = await fsPromises.readdir("temp");
+
+        await Promise.all(
+            files.map(file =>
+                fsPromises.rm(path.join("temp", file), { recursive: true, force: true })
+            )
+        );
+        console.log("Temp folder cleaned");
+    } catch (err) {
+        console.error(" Failed to clean temp:", err.message);
+    }
+};
 
 function checkFFmpeg() {
     return new Promise((resolve, reject) => {
@@ -60,7 +76,7 @@ const chunkVideo = (inputPath, outputDir) => {
         ffmpeg.stderr.on("data", (data) => {
             const line = data.toString();
 
-            console.log(line); 
+            console.log(line);
 
             if (line.includes("time=")) {
                 const match = line.match(/time=(\S+)/);
@@ -70,13 +86,18 @@ const chunkVideo = (inputPath, outputDir) => {
         ffmpeg.stderr.on("error", () => { });
         ffmpeg.stdout.on("error", () => { });
 
-        ffmpeg.on("close", (code) => {
+        ffmpeg.on("close", async (code) => {
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             if (code === 0) {
                 console.log(`\n\n FFmpeg done in ${elapsed}s`);
                 resolve();
             } else {
-                reject(new Error(`FFmpeg exited with code ${code}`));
+                // reject(new Error(`FFmpeg exited with code ${code}`));
+                await axios.post("http://localhost:3000/api/videos/webhook", {
+                    videoId,
+                    status: "Failed",
+                    hlsUrl: null
+                });
             }
         });
         ffmpeg.on("error", (err) => {
@@ -99,4 +120,6 @@ const chunkVideoWithWatermark = async (inputPath, outputDir) => {
     }
 };
 
-export { chunkVideoWithWatermark };
+
+
+export { chunkVideoWithWatermark, clearTempFolder };
