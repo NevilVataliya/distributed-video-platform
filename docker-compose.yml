@@ -38,13 +38,28 @@ services:
       - minio_data:/data
     restart: unless-stopped
 
-  # 4. Live Streaming Server (For OBS Studio)
-  nginx-rtmp:
+   # 4. Live Streaming Server (The Origin Receiver for OBS)
+  nginx-origin:
     image: tiangolo/nginx-rtmp
-    container_name: hexanodes_rtmp
+    container_name: hexanodes_origin
     ports:
-      - "1935:1935" # Standard RTMP port for OBS to stream to
+      - "1935:1935" 
+    volumes:
+      - ./nginx-origin/nginx.conf:/etc/nginx/nginx.conf
     restart: unless-stopped
+
+  # 5. Live Streaming Server (The Edge Distributor for Frontend)
+  nginx-edge:
+    image: nginx:latest
+    container_name: hexanodes_edge
+    ports:
+      - "8080:8080" # The port for frontend video player
+    volumes:
+      - ./nginx-edge/nginx.conf:/etc/nginx/nginx.conf
+    restart: unless-stopped
+    depends_on:
+      - nginx-origin
+
 
 # Named volumes so your data doesn't disappear when you restart Docker
 volumes:
