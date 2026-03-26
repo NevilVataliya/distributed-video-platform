@@ -1,28 +1,42 @@
 import { Video } from "../models/Video.model.js";
+import { User } from "../models/User.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import crypto from "crypto";
 import { uploadToMinIO } from "../utils/minio.js";
 
 import { publishToQueue } from "../utils/rabbitmq.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const uploadVideo = asyncHandler(async(req , res )=>{
-    const file = req.file;
+// Dummy image functions
+const uploadImage = async (buffer) => {
+    return `dummy-thumbnail-url-${Date.now()}.jpg`;
+};
 
-    if (!file) {
-        throw new ApiError(400,"No file uploaded")
+const deleteImage = async (imageUrl) => {
+    console.log(`Deleted image: ${imageUrl}`);
+};
+
+const uploadVideo = asyncHandler(async(req , res )=>{
+    const videoFile = req.files?.video?.[0] || req.file;
+    const thumbnailFile = req.files?.thumbnail?.[0];
+
+    if (!videoFile) {
+        throw new ApiError(400,"No video file uploaded")
     }
 
+    let thumbnailUrl = "";
+    if (thumbnailFile) {
+        thumbnailUrl = await uploadImage(thumbnailFile.buffer);
+    }
 
-    const objectName = `${Date.now()}-${file.originalname}`;
-    await uploadToMinIO(file.buffer, objectName);
+    const objectName = `${Date.now()}-${videoFile.originalname}`;
+    await uploadToMinIO(videoFile.buffer, objectName);
 
 
     const video = await Video.create({
-      title: file.originalname,
+      title: videoFile.originalname,
       status: "Processing",
-      streamKey: crypto.randomBytes(8).toString("hex"),
+      thumbnail: thumbnailUrl
     });
 
     await publishToQueue("video-processing",{
@@ -32,7 +46,8 @@ const uploadVideo = asyncHandler(async(req , res )=>{
 
     return res.status(200).json({
       message: "Processing",
-      videoId: video._id.toString()
+      videoId: video._id.toString(),
+      thumbnail: thumbnailUrl
     });
 });
 
@@ -60,8 +75,8 @@ const webhookUpdate= asyncHandler(async(req,res)=>{
 const streamAuth= asyncHandler(async(req,res)=>{
   const {name} = req.body  //check
 
-  const video = await Video.findOne({streamKey:name});
-  if(!video){
+  const user = await User.findOne({streamKey:name});
+  if(!user){
     return res.sendStatus(401);
   }
   return res.sendStatus(200);
@@ -90,4 +105,31 @@ const getAllReadyVideo = asyncHandler(async(req,res)=>{
 
 })
 
-export { uploadVideo,streamAuth,getAllReadyVideo,getVideoStatus,webhookUpdate };
+const updateThumbnail = asyncHandler(async(req,res)=>{
+    const videoId = req.params.id;
+    const file = req.file;
+
+    if (!file) {
+        throw new ApiError(400, "No thumbnail file uploaded");
+    }
+
+    const video = await Video.findById(videoId);
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    if (video.thumbnail) {
+        await deleteImage(video.thumbnail);
+    }
+
+    const newThumbnailUrl = await uploadImage(file.buffer);
+    
+    video.thumbnail = newThumbnailUrl;
+    await video.save();
+
+    return res.status(200).json(
+        new ApiResponse(200, video, "Thumbnail updated successfully")
+    );
+});
+
+export { uploadVideo,streamAuth,getAllReadyVideo,getVideoStatus,webhookUpdate,updateThumbnail };

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function UploadPage() {
   const [file, setFile] = useState(null);
+  const [thumbnail, setThumbnail] = useState(null);
   const [status, setStatus] = useState("");
   const navigate = useNavigate();
 
@@ -15,6 +16,9 @@ export default function UploadPage() {
 
     const formData = new FormData();
     formData.append("video", file);
+    if (thumbnail) {
+      formData.append("thumbnail", thumbnail);
+    }
 
     try {
       setStatus("Uploading...");
@@ -59,10 +63,23 @@ export default function UploadPage() {
     <div style={{ padding: "20px" }}>
       <h2>Upload Video</h2>
 
-      <input
-        type="file"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+      <div style={{ marginBottom: "15px" }}>
+        <label>Video File: </label>
+        <input
+          type="file"
+          accept="video/*"
+          onChange={(e) => setFile(e.target.files[0])}
+        />
+      </div>
+
+      <div style={{ marginBottom: "15px" }}>
+        <label>Thumbnail (Optional): </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setThumbnail(e.target.files[0])}
+        />
+      </div>
 
       <br /><br />
 

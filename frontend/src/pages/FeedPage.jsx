@@ -39,10 +39,22 @@ export default function FeedPage() {
               border: "1px solid #ccc",
               padding: "10px",
               cursor: "pointer",
+              borderRadius: "10px",
             }}
             onClick={() => navigate(`/watch/${video._id}`)}
           >
-            <p>{video.title || "Untitled Video"}</p>
+            {video.thumbnail ? (
+              <img 
+                src={video.thumbnail}
+                alt="Thumbnail"
+                style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "8px", marginBottom: "10px" }}
+              />
+            ) : (
+              <div style={{ width: "100%", height: "200px", backgroundColor: "#eee", borderRadius: "8px", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span>No Thumbnail</span>
+              </div>
+            )}
+            <p style={{ fontWeight: "bold", margin: 0 }}>{video.title || "Untitled Video"}</p>
           </div>
         ))}
       </div>

@@ -19,11 +19,18 @@ const videoSchema = mongoose.Schema(
             type:String,
             default:""
         },
-        streamKey:{
+        duration:{
             type:String,
-            unique:true
+        },
+        owner:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        },
+        thumbnail:{
+            type:String,
+            default:""
         }
-        // user(owner) duration or thumbnail or metadata something after discussion add krna hai
+        // metadata something after discussion add krna hai
     },
     {timestamps:true}
 )
