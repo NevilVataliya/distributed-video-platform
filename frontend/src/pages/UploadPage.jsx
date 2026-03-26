@@ -14,7 +14,7 @@ export default function UploadPage() {
     }
 
     const formData = new FormData();
-    formData.append("videoFile", file);
+    formData.append("video", file);
 
     try {
       setStatus("Uploading...");
