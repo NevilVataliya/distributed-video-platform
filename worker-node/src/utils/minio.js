@@ -13,6 +13,7 @@ const MINIO_SECRET_KEY =
 
 const RAW_VIDEOS_BUCKET = "raw-videos";
 const PROCESSED_VIDEOS_BUCKET = "processed-videos";
+const THUMBNAILS_BUCKET = "thumbnails";
 
 const minioClient = new Client({
 	endPoint: MINIO_ENDPOINT,
@@ -22,28 +23,54 @@ const minioClient = new Client({
 	secretKey: MINIO_SECRET_KEY,
 });
 
+const getImageContentType = (value) => {
+	if (typeof value !== "string") {
+		return "application/octet-stream";
+	}
+
+	const extension = path.extname(value).toLowerCase();
+	if (extension === ".png") {
+		return "image/png";
+	}
+	if (extension === ".jpg" || extension === ".jpeg") {
+		return "image/jpeg";
+	}
+	if (extension === ".webp") {
+		return "image/webp";
+	}
+	if (extension === ".gif") {
+		return "image/gif";
+	}
+
+	return "application/octet-stream";
+};
+
+const setPublicReadPolicy = async (bucketName) => {
+	const publicReadPolicy = {
+		Version: "2012-10-17",
+		Statement: [
+			{
+				Effect: "Allow",
+				Principal: { AWS: ["*"] },
+				Action: ["s3:GetObject"],
+				Resource: [`arn:aws:s3:::${bucketName}/*`],
+			},
+		],
+	};
+
+	await minioClient.setBucketPolicy(bucketName, JSON.stringify(publicReadPolicy));
+};
+
 const ensureBucketExists = async (bucketName) => {
 	const exists = await minioClient.bucketExists(bucketName);
 	if (!exists) {
 		await minioClient.makeBucket(bucketName, "us-east-1");
 		console.log(`[MinIO] Created bucket: ${bucketName}`);
+	}
 
-		// AUTOMATION: If it's the processed videos bucket, make it public immediately
-		if (bucketName === PROCESSED_VIDEOS_BUCKET) {
-			const publicReadPolicy = {
-				Version: "2012-10-17",
-				Statement: [
-					{
-						Effect: "Allow",
-						Principal: { AWS: ["*"] },
-						Action: ["s3:GetObject"],
-						Resource: [`arn:aws:s3:::${bucketName}/*`],
-					},
-				],
-			};
-			await minioClient.setBucketPolicy(bucketName, JSON.stringify(publicReadPolicy));
-			console.log(`[MinIO] Set Public Read policy on bucket: ${bucketName}`);
-		}
+	if (bucketName === PROCESSED_VIDEOS_BUCKET || bucketName === THUMBNAILS_BUCKET) {
+		await setPublicReadPolicy(bucketName);
+		console.log(`[MinIO] Set Public Read policy on bucket: ${bucketName}`);
 	}
 };
 
@@ -109,6 +136,40 @@ export const uploadHLSFolder = async (folderPath, bucket, destinationFolder) => 
     await Promise.all(uploadPromises);
 
     return files.length;
+};
+
+export const uploadImage = async (bufferOrPath, objectName, bucketName = THUMBNAILS_BUCKET) => {
+	if (!bufferOrPath || !objectName || !bucketName) {
+		throw new Error("uploadImage requires bufferOrPath, objectName, and bucketName.");
+	}
+
+	await ensureBucketExists(bucketName);
+	const contentType = getImageContentType(objectName);
+
+	if (Buffer.isBuffer(bufferOrPath)) {
+		await minioClient.putObject(bucketName, objectName, bufferOrPath, bufferOrPath.length, {
+			"Content-Type": contentType,
+		});
+	} else {
+		await minioClient.fPutObject(bucketName, objectName, bufferOrPath, {
+			"Content-Type": contentType,
+		});
+	}
+
+	return {
+		bucket: bucketName,
+		objectName,
+		path: `${bucketName}/${objectName}`,
+	};
+};
+
+export const deleteImage = async (objectName, bucketName = THUMBNAILS_BUCKET) => {
+	if (!objectName || !bucketName) {
+		throw new Error("deleteImage requires objectName and bucketName.");
+	}
+
+	await ensureBucketExists(bucketName);
+	await minioClient.removeObject(bucketName, objectName);
 };
 
 export { minioClient, RAW_VIDEOS_BUCKET };
