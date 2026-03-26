@@ -21,10 +21,10 @@ app.use(cookieParser())
 
 
 import videoRouter from "./routes/video.route.js"
-
+import userRouter from "./routes/user.route.js"
 
 app.use("/api/videos",videoRouter)
-
+app.use("/api/users/",userRouter)
 
 app.get("/",(req,res)=>{
     res.send("server is ready")
