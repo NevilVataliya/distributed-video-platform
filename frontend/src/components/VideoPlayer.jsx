@@ -3,21 +3,19 @@ import videojs from "video.js";
 import "video.js/dist/video-js.css";
 
 export default function VideoPlayer({ src }) {
-  const videoRef = useRef(null);
+  const containerRef = useRef(null);
   const playerRef = useRef(null);
 
   useEffect(() => {
-    if (!playerRef.current) {
-      playerRef.current = videojs(videoRef.current, {
+    if (!playerRef.current && containerRef.current) {
+      const videoElement = document.createElement("video-js");
+      videoElement.classList.add("vjs-big-play-centered");
+      containerRef.current.appendChild(videoElement);
+
+      playerRef.current = videojs(videoElement, {
         controls: true,
         fluid: true,
         autoplay: false,
-        sources: [
-          {
-            src: src,
-            type: "application/x-mpegURL",
-          },
-        ],
       });
     }
 
@@ -27,14 +25,21 @@ export default function VideoPlayer({ src }) {
         playerRef.current = null;
       }
     };
+  }, []);
+
+  useEffect(() => {
+    if (!playerRef.current || !src) return;
+
+    playerRef.current.src({
+      src,
+      type: "application/x-mpegURL",
+    });
+    playerRef.current.load();
   }, [src]);
 
   return (
-    <div>
-      <video
-        ref={videoRef}
-        className="video-js vjs-big-play-centered"
-      />
+    <div data-vjs-player>
+      <div ref={containerRef} />
     </div>
   );
 }
