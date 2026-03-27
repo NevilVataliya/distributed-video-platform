@@ -1,6 +1,6 @@
 import amqp from "amqplib";
 
-const RABBIT_URL = "amqp://localhost";
+const RABBIT_URL = "amqp://rabbitmq:5672";
 
 export const consumeQueue = async (queueName, processingFunction) => {
   const connection = await amqp.connect(RABBIT_URL);
