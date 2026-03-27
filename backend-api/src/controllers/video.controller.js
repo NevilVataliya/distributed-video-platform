@@ -2,19 +2,19 @@ import { Video } from "../models/Video.model.js";
 import { User } from "../models/User.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { uploadToMinIO } from "../utils/minio.js";
+import { deleteImage, uploadImage, uploadToMinIO } from "../utils/minio.js";
 
 import { publishToQueue } from "../utils/rabbitmq.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 // Dummy image functions
-const uploadImage = async (buffer) => {
-    return `dummy-thumbnail-url-${Date.now()}.jpg`;
-};
+// const uploadImage = async (buffer) => {
+//     return `dummy-thumbnail-url-${Date.now()}.jpg`;
+// };
 
-const deleteImage = async (imageUrl) => {
-    console.log(`Deleted image: ${imageUrl}`);
-};
+// const deleteImage = async (imageUrl) => {
+//     console.log(`Deleted image: ${imageUrl}`);
+// };
 
 const uploadVideo = asyncHandler(async(req , res )=>{
     const videoFile = req.files?.video?.[0] || req.file;
@@ -27,7 +27,8 @@ const uploadVideo = asyncHandler(async(req , res )=>{
 
     let thumbnailUrl = "";
     if (thumbnailFile) {
-        thumbnailUrl = await uploadImage(thumbnailFile.buffer);
+        const uploadImageRes = await uploadImage(thumbnailFile.buffer, thumbnailFile.originalname);
+        thumbnailUrl = uploadImageRes.path;
     }
 
     const objectName = `${Date.now()}-${videoFile.originalname}`;
