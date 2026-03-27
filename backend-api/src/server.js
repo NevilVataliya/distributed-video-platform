@@ -22,9 +22,11 @@ app.use(cookieParser())
 
 import videoRouter from "./routes/video.route.js"
 import userRouter from "./routes/user.route.js"
+import webhookRouter from "./routes/webhook.route.js"
 
 app.use("/api/videos",videoRouter)
 app.use("/api/users/",userRouter)
+app.use("/api/webhooks",webhookRouter)
 
 app.get("/",(req,res)=>{
     res.send("server is ready")

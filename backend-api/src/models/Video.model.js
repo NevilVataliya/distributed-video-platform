@@ -6,13 +6,16 @@ const videoSchema = mongoose.Schema(
             type:String,
             required:true
         },
+        description:{
+            type:String
+        },
         uploadDate:{
             type:Date,
             default:Date.now
         },
         status:{
             type:String,
-            enum:["Processing","Ready"],
+            enum:["Processing","Ready","Live","Failed"],
             default:"Processing"
         },
         hlsUrl:{
@@ -26,9 +29,13 @@ const videoSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
         },
-        thumbnail:{
+        thumbnailUrl:{
             type:String,
             default:""
+        },
+        views:{
+            type:Number,
+            default:0
         }
         // metadata something after discussion add krna hai
     },
