@@ -60,6 +60,18 @@ services:
     depends_on:
       - nginx-origin
 
+  # 6. Video Processing Worker (Scalable)
+  worker-node:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./worker-node:/app
+    command: sh -c "apk add --no-cache ffmpeg && "npm install && npm run dev"
+    depends_on:
+      - rabbitmq
+      - minio
+    restart: unless-stopped
+
 
 # Named volumes so your data doesn't disappear when you restart Docker
 volumes:

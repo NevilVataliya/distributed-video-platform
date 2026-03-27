@@ -3,7 +3,7 @@ import { Client } from "minio";
 import fs from "fs";
 import path from "path";
 
-const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || "localhost";
+const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || "minio";
 const MINIO_PORT = parseInt(process.env.MINIO_PORT || "9000", 10);
 const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true"||false;
 const MINIO_ACCESS_KEY =
