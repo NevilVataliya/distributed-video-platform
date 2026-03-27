@@ -93,7 +93,7 @@ const loginUser = asyncHandler(async(req,res)=>{
     //     httpOnly:true,
     //     secure:true
     // }
-    //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWM1NmIyOTRlOGQ1MzgzNWUzNGQyZWYiLCJpYXQiOjE3NzQ1NDYwNTEsImV4cCI6MTc3NTQxMDA1MX0.YO8Mk3_bIalUrexMsqFp1l0ut3UUe2W1qrP5GTFmyvw
+    
     return res.status(200)
     .cookie("accessToken",accessToken)
     .cookie("refreshToken",refreshToken)
