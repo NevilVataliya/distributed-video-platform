@@ -5,7 +5,7 @@ import { Video } from "../models/Video.model.js";
 import { User } from "../models/User.model.js";
 
 const webhookUpdate = asyncHandler(async(req,res)=>{
-  const {videoId, status, hlsUrl, thumbnailUrl} = req.body;
+  const {videoId, status, hlsUrl, thumbnailUrl,duration} = req.body;
   const video = await Video.findById(videoId);
   if(!video){
     throw new ApiError(404,"Video not found");
@@ -16,6 +16,7 @@ const webhookUpdate = asyncHandler(async(req,res)=>{
   if(video.thumbnailUrl==""){
     if(thumbnailUrl !== undefined) video.thumbnailUrl = thumbnailUrl;
   }
+  if(duration !== undefined) video.duration = duration;
   
   const updatedV = await video.save();
 
