@@ -46,6 +46,7 @@ const uploadVideo = asyncHandler(async(req , res )=>{
     await publishToQueue("video-processing",{
       videoId: video._id.toString(),
       objectName,
+      thumbnail: !!thumbnailUrl,
     });
 
     return res.status(200).json({
