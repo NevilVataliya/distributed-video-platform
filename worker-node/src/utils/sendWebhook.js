@@ -1,12 +1,13 @@
 import axios from "axios";
+import { BUCKETS, MINIO, WEBHOOK, VIDEO_PROCESSING } from "../constants.js";
 
 export const sendWebhook = async (videoId, thumbnailUrl, duration) => {
-    const hlsUrl = `http://localhost:9000/processed-videos/${videoId}/playlist.m3u8`;
+    const hlsUrl = `${MINIO.PUBLIC_BASE_URL}/${BUCKETS.PROCESSED_VIDEOS}/${videoId}/${VIDEO_PROCESSING.PLAYLIST_FILE_NAME}`;
     try {
         const response =
-            await axios.post("http://host.docker.internal:3000/api/webhooks/processing-done", {
+            await axios.post(`${WEBHOOK.BASE_URL}${WEBHOOK.PROCESSING_DONE_PATH}`, {
                 videoId,
-                status: "Ready",
+                status: WEBHOOK.STATUS_READY,
                 hlsUrl,
                 thumbnailUrl,
                 duration

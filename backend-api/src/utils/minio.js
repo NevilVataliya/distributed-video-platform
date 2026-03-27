@@ -1,18 +1,18 @@
 import { Client } from "minio";
 import 'dotenv/config'
 import path from "path";
+import { MINIO } from "../constants.js";
 
-const MINIO_ENDPOINT = "localhost";
-const MINIO_PORT = 9000;
-const MINIO_USE_SSL = false;
+const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || MINIO.ENDPOINT;
+const MINIO_PORT = parseInt(process.env.MINIO_PORT || String(MINIO.PORT), 10);
+const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true" || MINIO.USE_SSL;
 const MINIO_ACCESS_KEY =
 	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "minioadmin";
 const MINIO_SECRET_KEY =
 	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "minioadmin";
 
-const RAW_VIDEOS_BUCKET = "raw-videos";
-const THUMBNAILS_BUCKET = "thumbnails";
-console.log(MINIO_ACCESS_KEY)
+const RAW_VIDEOS_BUCKET = MINIO.BUCKETS.RAW_VIDEOS;
+const THUMBNAILS_BUCKET = MINIO.BUCKETS.THUMBNAILS;
 
 const minioClient = new Client({
 	endPoint: MINIO_ENDPOINT,
@@ -65,7 +65,7 @@ const setPublicReadPolicy = async (bucketName) => {
 const ensureBucketExists = async (bucketName) => {
 	const exists = await minioClient.bucketExists(bucketName);
 	if (!exists) {
-		await minioClient.makeBucket(bucketName, "us-east-1");
+		await minioClient.makeBucket(bucketName, MINIO.REGION);
 	}
 
 	if (bucketName === THUMBNAILS_BUCKET) {

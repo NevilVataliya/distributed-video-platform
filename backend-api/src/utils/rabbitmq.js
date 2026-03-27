@@ -1,6 +1,7 @@
 import amqp from "amqplib";
+import { RABBITMQ } from "../constants.js";
 
-const RABBIT_URL = "amqp://localhost";
+const RABBIT_URL = RABBITMQ.URL;
 
 export const publishToQueue = async (queueName, dataObject) => {
   console.log("rabbitmq.js")

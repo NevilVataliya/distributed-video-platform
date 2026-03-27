@@ -1,6 +1,7 @@
 import amqp from "amqplib";
+import { RABBITMQ } from "../constants.js";
 
-const RABBIT_URL = "amqp://rabbitmq:5672";
+const RABBIT_URL = RABBITMQ.URL;
 
 export const consumeQueue = async (queueName, processingFunction) => {
   const connection = await amqp.connect(RABBIT_URL);
@@ -9,7 +10,7 @@ export const consumeQueue = async (queueName, processingFunction) => {
   await channel.assertQueue(queueName, { durable: true });
 
   // 🔒 CPU SAFETY LOCK
-  channel.prefetch(1);
+  channel.prefetch(RABBITMQ.PREFETCH_COUNT);
 
   console.log(`Waiting for messages in ${queueName}`);
 

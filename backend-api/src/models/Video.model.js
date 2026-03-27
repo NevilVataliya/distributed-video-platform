@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { VIDEO_STATUS } from "../constants.js";
 
 const videoSchema = mongoose.Schema(
     {
@@ -15,8 +16,8 @@ const videoSchema = mongoose.Schema(
         },
         status:{
             type:String,
-            enum:["Processing","Ready","Live","Failed"],
-            default:"Processing"
+            enum:[VIDEO_STATUS.PROCESSING, VIDEO_STATUS.READY, VIDEO_STATUS.LIVE, VIDEO_STATUS.FAILED],
+            default:VIDEO_STATUS.PROCESSING
         },
         hlsUrl:{
             type:String,

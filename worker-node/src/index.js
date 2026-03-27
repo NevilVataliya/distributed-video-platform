@@ -1,5 +1,6 @@
 import { processVideo } from "./services/videoProcessor.js";
 import {consumeQueue} from "./utils/rabbitmq.js";
+import { QUEUES } from "./constants.js";
 
 // video_tasks
-consumeQueue("video-processing", processVideo);
+consumeQueue(QUEUES.VIDEO_PROCESSING, processVideo);

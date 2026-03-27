@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Video } from "../models/Video.model.js";
 import { User } from "../models/User.model.js";
+import { VIDEO_STATUS } from "../constants.js";
 
 const webhookUpdate = asyncHandler(async(req,res)=>{
   const {videoId, status, hlsUrl, thumbnailUrl,duration} = req.body;
@@ -49,7 +50,7 @@ const webhookStreamStart = asyncHandler(async(req,res)=>{
     await Video.create({
         title: `${user.username}'s Live Stream`,
         description: `Live broadcast by ${user.username}`,
-        status: "Live",
+      status: VIDEO_STATUS.LIVE,
         owner: user._id
     });
 

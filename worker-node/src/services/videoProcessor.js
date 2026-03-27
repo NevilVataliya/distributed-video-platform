@@ -3,6 +3,7 @@ import path from "path";
 import { exec, spawn } from "child_process";
 import { chunkVideoWithWatermark, clearTempFolder } from "./chunkVideo.js";
 import { sendWebhook } from "../utils/sendWebhook.js";
+import { BUCKETS, VIDEO_PROCESSING } from "../constants.js";
 
 
 const downloadRawVideoAndSave = async (name, localPath) => {
@@ -19,7 +20,7 @@ const generateThumbnail = async (inputPath, thumbnailPath) => {
   await new Promise((resolve, reject) => {
     const ffmpeg = spawn("ffmpeg", [
       "-i", inputPath,
-      "-ss", "00:00:02",
+      "-ss", VIDEO_PROCESSING.THUMBNAIL_CAPTURE_AT,
       "-vframes", "1",
       thumbnailPath,
       "-y"
@@ -70,8 +71,8 @@ const processVideo = async (data, ack, nack) => {
     const { videoId, objectName } = data;
     console.log(`Starting processing for videoId: ${videoId}, objectName: ${objectName}`);
     const localPath = path.join("temp", objectName);
-  const outputDir = path.join("temp", "output");
-  const thumbnailPath = path.join(outputDir, "thumbnail.jpg");
+  const outputDir = path.join("temp", VIDEO_PROCESSING.OUTPUT_DIR_NAME);
+  const thumbnailPath = path.join(outputDir, VIDEO_PROCESSING.THUMBNAIL_FILE_NAME);
 
     
     await downloadRawVideoAndSave(objectName, localPath);
@@ -83,17 +84,17 @@ const processVideo = async (data, ack, nack) => {
     await generateThumbnail(localPath, thumbnailPath);
     const duration = await extractDurationMMSS(localPath);
 
-    const thumbnailObjectName = `${videoId}/thumbnail.jpg`;
-    await uploadImage(thumbnailPath, thumbnailObjectName, "thumbnails");
+    const thumbnailObjectName = `${videoId}/${VIDEO_PROCESSING.THUMBNAIL_FILE_NAME}`;
+    await uploadImage(thumbnailPath, thumbnailObjectName, BUCKETS.THUMBNAILS);
 
     
     await uploadHLSFolder(
       outputDir,
-      "processed-videos",
+      BUCKETS.PROCESSED_VIDEOS,
       videoId
     );
 
-    const thumbnailUrl = `http://localhost:9000/thumbnails/${thumbnailObjectName}`;
+    const thumbnailUrl = `${BUCKETS.THUMBNAILS}/${thumbnailObjectName}`;
     
     console.log(` Finished processing ${objectName}`);
 

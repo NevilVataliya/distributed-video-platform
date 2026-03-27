@@ -2,9 +2,10 @@ import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import axios from "axios";
+import { VIDEO_PROCESSING, WEBHOOK } from "../constants.js";
 
-const CHUNK_SECONDS = 6;
-const WATERMARK_TEXT = "Sample Watermark";
+const CHUNK_SECONDS = VIDEO_PROCESSING.CHUNK_SECONDS;
+const WATERMARK_TEXT = VIDEO_PROCESSING.WATERMARK_TEXT;
 const fsPromises = fs.promises;
 
 const clearTempFolder = async () => {
@@ -93,9 +94,9 @@ const chunkVideo = (inputPath, outputDir, videoId) => {
                 resolve();
             } else {
                 // reject(new Error(`FFmpeg exited with code ${code}`));
-                await axios.post("http://host.docker.internal:3000/api/webhooks/processing-done", {
+                await axios.post(`${WEBHOOK.BASE_URL}${WEBHOOK.PROCESSING_DONE_PATH}`, {
                     videoId,
-                    status: "Failed",
+                    status: WEBHOOK.STATUS_FAILED,
                     hlsUrl: null
                 });
             }

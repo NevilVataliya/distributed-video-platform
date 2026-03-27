@@ -2,18 +2,19 @@ import 'dotenv/config';
 import { Client } from "minio";
 import fs from "fs";
 import path from "path";
+import { BUCKETS, MINIO } from "../constants.js";
 
-const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || "minio";
-const MINIO_PORT = parseInt(process.env.MINIO_PORT || "9000", 10);
-const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true"||false;
+const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || MINIO.ENDPOINT;
+const MINIO_PORT = parseInt(process.env.MINIO_PORT || String(MINIO.PORT), 10);
+const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true" || MINIO.USE_SSL;
 const MINIO_ACCESS_KEY =
 	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "minioadmin";
 const MINIO_SECRET_KEY =
 	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "minioadmin";
 
-const RAW_VIDEOS_BUCKET = "raw-videos";
-const PROCESSED_VIDEOS_BUCKET = "processed-videos";
-const THUMBNAILS_BUCKET = "thumbnails";
+const RAW_VIDEOS_BUCKET = BUCKETS.RAW_VIDEOS;
+const PROCESSED_VIDEOS_BUCKET = BUCKETS.PROCESSED_VIDEOS;
+const THUMBNAILS_BUCKET = BUCKETS.THUMBNAILS;
 
 const minioClient = new Client({
 	endPoint: MINIO_ENDPOINT,
@@ -64,7 +65,7 @@ const setPublicReadPolicy = async (bucketName) => {
 const ensureBucketExists = async (bucketName) => {
 	const exists = await minioClient.bucketExists(bucketName);
 	if (!exists) {
-		await minioClient.makeBucket(bucketName, "us-east-1");
+		await minioClient.makeBucket(bucketName, MINIO.REGION);
 		console.log(`[MinIO] Created bucket: ${bucketName}`);
 	}
 

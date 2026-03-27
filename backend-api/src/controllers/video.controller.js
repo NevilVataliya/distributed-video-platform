@@ -6,6 +6,7 @@ import { deleteImage, uploadImage, uploadToMinIO } from "../utils/minio.js";
 
 import { publishToQueue } from "../utils/rabbitmq.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { RABBITMQ, VIDEO_STATUS } from "../constants.js";
 
 // Dummy image functions
 // const uploadImage = async (buffer) => {
@@ -38,19 +39,19 @@ const uploadVideo = asyncHandler(async(req , res )=>{
     const video = await Video.create({
       title: title || videoFile.originalname,
       description: description || "",
-      status: "Processing",
+      status: VIDEO_STATUS.PROCESSING,
       thumbnailUrl: thumbnailUrl,
       owner: req.user?._id
     });
 
-    await publishToQueue("video-processing",{
+    await publishToQueue(RABBITMQ.QUEUES.VIDEO_PROCESSING,{
       videoId: video._id.toString(),
       objectName,
       thumbnail: !!thumbnailUrl,
     });
 
     return res.status(200).json({
-      message: "Processing",
+      message: VIDEO_STATUS.PROCESSING,
       videoId: video._id.toString(),
       thumbnailUrl: thumbnailUrl
     });
@@ -82,7 +83,7 @@ const getVideoStatus = asyncHandler(async(req,res)=>{
 })
 
 const getAllReadyVideo = asyncHandler(async(req,res)=>{
-  const videos = await Video.find({status: { $in: ["Ready", "Live"] }}).sort({uploadDate:-1});
+  const videos = await Video.find({status: { $in: [VIDEO_STATUS.READY, VIDEO_STATUS.LIVE] }}).sort({uploadDate:-1});
   if(!videos){
     throw new ApiError(400,"some error occured or no video is ready")
   }
