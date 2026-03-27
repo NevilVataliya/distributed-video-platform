@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllReadyVideo, getVideoStatus, streamAuth, uploadVideo, webhookUpdate, getVideoById, updateVideoDetails, deleteVideo } from "../controllers/video.controller.js";
+import { getAllReadyVideo, getVideoStatus, streamAuth, uploadVideo, getVideoById, updateVideoDetails, deleteVideo } from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.js";
 import multer from "multer";
 
@@ -14,7 +14,6 @@ router.route("/upload").post(
     ]),
     uploadVideo
 )
-router.route("/webhook").post(webhookUpdate)
 router.route("/stream/auth").post(streamAuth)  // express.urlencoded({ extended: true })
 router.route("/:id/status").get(getVideoStatus)
 router.route("/").get(getAllReadyVideo)

@@ -24,6 +24,8 @@ const webhookUpdate = asyncHandler(async(req,res)=>{
     throw new ApiError(500, "Unable to update status and hls");
   }
   
+  // console.log(`Updated video ${videoId} with status: ${status}, hlsUrl: ${hlsUrl}, thumbnailUrl: ${thumbnailUrl}, duration: ${duration}`);
+
   return res.status(200).json(
     new ApiResponse(200, updatedV, "Successfully updated the status and hls")
   );

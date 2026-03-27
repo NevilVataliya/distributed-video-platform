@@ -55,26 +55,6 @@ const uploadVideo = asyncHandler(async(req , res )=>{
     });
 });
 
-const webhookUpdate= asyncHandler(async(req,res)=>{
-  const {videoId,status,hlsUrl}=req.body
-  const video = await Video.findById(videoId)
-  if(!video){
-    throw new ApiError(404,"Video not found")
-  }
-  video.status = status
-  video.hlsUrl=hlsUrl
-  const updatedV = await video.save();
-
-  // console.log("Webhook received for videoId:", videoId, "Status:", status, "HLS URL:", hlsUrl);
-  // console.log("Updated video document:", updatedV);
-
-  if(!updatedV){
-    throw new ApiError(500,"Unable to update status and hls ")
-  }
-  return res.status(201).json(
-    new ApiResponse(200,updatedV,"Successfully updated the status and hls")
-  )
-})
 
 const streamAuth= asyncHandler(async(req,res)=>{
   const {name} = req.body  //check
@@ -178,7 +158,6 @@ export { uploadVideo,
   streamAuth,
   getAllReadyVideo,
   getVideoStatus,
-  webhookUpdate,
   updateVideoDetails,
   getVideoById,
   deleteVideo };

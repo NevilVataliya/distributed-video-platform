@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+
+const BACKEND_URL = "http://localhost:3000";
+const MINIO_URL = "http://localhost:9000";
+
+
 export default function FeedPage() {
   const [videos, setVideos] = useState([]);
   const navigate = useNavigate();
@@ -10,7 +15,7 @@ export default function FeedPage() {
     const fetchVideos = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:3000/api/videos"
+          `${BACKEND_URL}/api/videos`
         );
         setVideos(res.data);
       } catch (error) {
@@ -43,9 +48,9 @@ export default function FeedPage() {
             }}
             onClick={() => navigate(`/watch/${video._id}`)}
           >
-            {video.thumbnail ? (
+            {video.thumbnailUrl ? (
               <img 
-                src={video.thumbnail}
+                src={`${MINIO_URL}/${video.thumbnailUrl}`}
                 alt="Thumbnail"
                 style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "8px", marginBottom: "10px" }}
               />
