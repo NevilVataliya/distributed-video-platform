@@ -3,9 +3,9 @@ import 'dotenv/config'
 import path from "path";
 import { MINIO } from "../constants.js";
 
-const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || MINIO.ENDPOINT;
-const MINIO_PORT = parseInt(process.env.MINIO_PORT || String(MINIO.PORT), 10);
-const MINIO_USE_SSL = process.env.MINIO_USE_SSL === "true" || MINIO.USE_SSL;
+const MINIO_ENDPOINT = MINIO.ENDPOINT;
+const MINIO_PORT = parseInt(String(MINIO.PORT), 10);
+const MINIO_USE_SSL = MINIO.USE_SSL;
 const MINIO_ACCESS_KEY =
 	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "minioadmin";
 const MINIO_SECRET_KEY =
