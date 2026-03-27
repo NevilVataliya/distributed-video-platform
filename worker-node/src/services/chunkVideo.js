@@ -93,7 +93,7 @@ const chunkVideo = (inputPath, outputDir, videoId) => {
                 resolve();
             } else {
                 // reject(new Error(`FFmpeg exited with code ${code}`));
-                await axios.post("http://host.docker.internal:3000/api/videos/webhook", {
+                await axios.post("http://host.docker.internal:3000/api/webhooks/processing-done", {
                     videoId,
                     status: "Failed",
                     hlsUrl: null
