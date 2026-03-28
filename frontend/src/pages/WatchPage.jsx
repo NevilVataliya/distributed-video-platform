@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router'
 import { motion } from 'motion/react'
-import { Eye, Calendar, Share2, Check } from 'lucide-react'
+import { Eye, Calendar, Share2, Check, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { VideoPlayer } from '@/components/video/VideoPlayer'
@@ -12,16 +12,43 @@ import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatViews, timeAgo } from '@/lib/utils'
 
+function getLiveStreamKey(hlsUrl = '') {
+  const match = /^live\/([^/.]+)\.m3u8$/i.exec(hlsUrl)
+  return match?.[1] || ''
+}
+
+function getSessionViewerId() {
+  const storageKey = 'hexanodes_live_viewer_id'
+  let vId = sessionStorage.getItem(storageKey)
+
+  if (!vId) {
+    vId = Math.random().toString(36).substring(2, 15)
+    sessionStorage.setItem(storageKey, vId)
+  }
+
+  return vId
+}
+
 export function WatchPage() {
   const { id } = useParams()
   const [video, setVideo] = useState(null)
   const [related, setRelated] = useState([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [liveViewers, setLiveViewers] = useState(0)
   const viewRecorded = useRef(null)
+  const viewerIdRef = useRef(getSessionViewerId())
 
   useEffect(() => {
+    if (!id) {
+      setVideo(null)
+      setRelated([])
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
+
     Promise.all([
       api.videos.getById(id),
       api.videos.getAll().catch(() => []),
@@ -30,13 +57,72 @@ export function WatchPage() {
       const list = Array.isArray(all) ? all : all.videos || []
       setRelated(list.filter((v) => (v._id || v.id) !== id).slice(0, 8))
       if (viewRecorded.current !== id) {
-        api.videos.view(id).catch(() => { })
+        // Block repeated refresh-based increments for the same browser.
+        const storageKey = 'hexanodes_viewed_videos'
+        let viewedVideos = []
+
+        try {
+          const raw = localStorage.getItem(storageKey)
+          viewedVideos = JSON.parse(raw || '[]')
+          if (!Array.isArray(viewedVideos)) {
+            viewedVideos = []
+          }
+        } catch {
+          viewedVideos = []
+        }
+
+        if (!viewedVideos.includes(id)) {
+          api.videos.view(id).catch(() => { })
+          viewedVideos.push(id)
+
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(viewedVideos))
+          } catch {
+            // Ignore storage write failures and continue without crashing.
+          }
+        }
+
         viewRecorded.current = id
       }
     }).catch(() => {
       setVideo(null)
+      setRelated([])
     }).finally(() => setLoading(false))
   }, [id])
+
+  useEffect(() => {
+    let heartbeatInterval
+    let statsInterval
+
+    // Keep live viewer count fresh while a live stream is being watched.
+    if (video && String(video.status || '').toLowerCase() === 'live') {
+      const parsedStreamKey = getLiveStreamKey(video.hlsUrl)
+
+      if (parsedStreamKey) {
+        const sendHeartbeat = () => {
+          api.videos.liveHeartbeat(parsedStreamKey, viewerIdRef.current).catch(() => { })
+        }
+
+        const fetchStats = () => {
+          api.videos.liveStats(parsedStreamKey)
+            .then((res) => {
+              setLiveViewers(res?.viewers || 0)
+            }).catch(() => { })
+        }
+
+        sendHeartbeat()
+        fetchStats()
+
+        heartbeatInterval = setInterval(sendHeartbeat, 10000)
+        statsInterval = setInterval(fetchStats, 10000)
+      }
+    }
+
+    return () => {
+      clearInterval(heartbeatInterval)
+      clearInterval(statsInterval)
+    }
+  }, [video])
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -47,7 +133,7 @@ export function WatchPage() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 max-w-[1600px] mx-auto">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 max-w-400 mx-auto">
         <div className="xl:col-span-2 space-y-4">
           <Skeleton className="aspect-video w-full rounded-xl" />
           <Skeleton className="h-8 w-3/4" />
@@ -72,18 +158,17 @@ export function WatchPage() {
 
   const uploaderName = video.owner?.fullName || 'Unknown'
   const uploaderUsername = video.owner?.username || 'Unknown'
+  const isLiveVideo = String(video.status || '').toLowerCase() === 'live'
+  const isLiveHls = Boolean(getLiveStreamKey(video.hlsUrl))
+  const playbackSrc = isLiveHls ? `http://localhost:8080/${video.hlsUrl}` : `http://localhost:9000/${video.hlsUrl}`
+  const playbackPoster = video.thumbnailUrl ? `http://localhost:9000/${video.thumbnailUrl}` : undefined
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-[1600px] mx-auto">
+    <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-400 mx-auto">
       {/* Main column */}
       <div className="lg:col-span-2 xl:col-span-3 space-y-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          {/* {console.log(video)} */}
-          {video.hlsUrl.startsWith('live') ? (
-            <VideoPlayer src={`http://localhost:8080/${video.hlsUrl}`} poster={`http://localhost:9000/${video.thumbnailUrl}`} autoPlay />
-          )
-          : (<VideoPlayer src={`http://localhost:9000/${video.hlsUrl}`} poster={`http://localhost:9000/${video.thumbnailUrl}`} autoPlay />
-          )}
+          <VideoPlayer src={playbackSrc} poster={playbackPoster} autoPlay live={isLiveVideo} />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
@@ -113,10 +198,14 @@ export function WatchPage() {
           {/* Video info card */}
           <div className="rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors border border-border p-4 space-y-2 cursor-pointer">
             <div className="flex items-center gap-3 text-sm font-semibold text-foreground">
-              <span className="flex items-center gap-1.5"><Eye className="w-4 h-4" />{formatViews(video.views)} views</span>
+              {isLiveVideo ? (
+                <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-live" />{formatViews(liveViewers)} watching now</span>
+              ) : (
+                <span className="flex items-center gap-1.5"><Eye className="w-4 h-4" />{formatViews(video.views)} views</span>
+              )}
               <span>•</span>
               <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{timeAgo(video.createdAt)}</span>
-              {video.status && <Badge variant={video.status === 'Ready' ? 'success' : 'secondary'} className="ml-2">{video.status}</Badge>}
+              {video.status && <Badge variant={video.status === 'Live' ? 'live' : (video.status === 'Ready' ? 'success' : 'secondary')} className="ml-2">{video.status}</Badge>}
             </div>
             {video.description && (
               <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap mt-2">

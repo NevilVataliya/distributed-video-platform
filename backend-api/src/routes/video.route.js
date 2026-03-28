@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllReadyVideo, getVideoStatus, streamAuth, uploadVideo, getVideoById, updateVideoDetails, deleteVideo, incrementVideoViews, getLiveViewers } from "../controllers/video.controller.js";
+import { getAllReadyVideo, getVideoStatus, streamAuth, uploadVideo, getVideoById, updateVideoDetails, deleteVideo, incrementVideoViews, getLiveViewers, liveStreamHeartbeat } from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.js";
 import multer from "multer";
 
@@ -16,6 +16,7 @@ router.route("/upload").post(
 )
 router.route("/stream/auth").post(streamAuth)  // express.urlencoded({ extended: true })
 router.route("/live/:streamKey/stats").get(getLiveViewers)
+router.route("/live/:streamKey/heartbeat").post(liveStreamHeartbeat);
 router.route("/:id/status").get(getVideoStatus)
 router.route("/").get(getAllReadyVideo)
 router.route("/:id").get(getVideoById)
