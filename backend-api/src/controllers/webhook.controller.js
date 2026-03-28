@@ -51,7 +51,8 @@ const webhookStreamStart = asyncHandler(async(req,res)=>{
     await Video.create({
         title: `${user.username}'s Live Stream`,
         description: `Live broadcast by ${user.username}`,
-      status: VIDEO_STATUS.LIVE,
+        status: VIDEO_STATUS.LIVE,
+        hlsUrl: 'live/' + name + '.m3u8', // Assuming Nginx is configured to save live streams in this format
         owner: user._id
     });
 
