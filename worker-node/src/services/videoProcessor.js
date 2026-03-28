@@ -17,27 +17,53 @@ const downloadRawVideoAndSave = async (name, localPath) => {
 }
 
 const generateThumbnail = async (inputPath, thumbnailPath) => {
-  await new Promise((resolve, reject) => {
-    const ffmpeg = spawn("ffmpeg", [
-      "-i", inputPath,
-      "-ss", VIDEO_PROCESSING.THUMBNAIL_CAPTURE_AT,
-      "-vframes", "1",
-      thumbnailPath,
-      "-y"
-    ]);
+  try {
+    await new Promise((resolve, reject) => {
+      const ffmpeg = spawn("ffmpeg", [
+        "-i", inputPath,
+        "-ss", VIDEO_PROCESSING.THUMBNAIL_CAPTURE_AT,
+        "-vframes", "1",
+        thumbnailPath,
+        "-y"
+      ]);
 
-    ffmpeg.on("error", (error) => {
-      reject(new Error(`Failed to start thumbnail extraction: ${error.message}`));
-    });
+      ffmpeg.on("error", (error) => {
+        reject(new Error(`Failed to start thumbnail extraction: ${error.message}`));
+      });
 
-    ffmpeg.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Thumbnail extraction failed with code ${code}`));
-      }
+      ffmpeg.on("close", (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Thumbnail extraction failed with code ${code}`));
+        }
+      });
     });
-  });
+  } catch (error) {
+    // If thumbnail extraction fails (e.g., video too short), try from the start
+    console.warn(`Thumbnail extraction at ${VIDEO_PROCESSING.THUMBNAIL_CAPTURE_AT} failed. Retrying from start.`);
+    await new Promise((resolve, reject) => {
+      const ffmpeg = spawn("ffmpeg", [
+        "-i", inputPath,
+        "-ss", "00:00:00",
+        "-vframes", "1",
+        thumbnailPath,
+        "-y"
+      ]);
+
+      ffmpeg.on("error", (error) => {
+        reject(new Error(`Failed to start thumbnail extraction: ${error.message}`));
+      });
+
+      ffmpeg.on("close", (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Thumbnail extraction from start failed with code ${code}`));
+        }
+      });
+    });
+  }
 };
 
 const formatDurationToMMSS = (seconds) => {
@@ -68,15 +94,30 @@ const extractDurationMMSS = async (inputPath) => {
 
 const processVideo = async (data, ack, nack) => {
   try {
-    const { videoId, objectName } = data;
-    console.log(`Starting processing for videoId: ${videoId}, objectName: ${objectName}`);
-    const localPath = path.join("temp", objectName);
+    console.log(`Received data:`, JSON.stringify(data));
+    const { videoId, objectName, flvPath, isLiveRecording } = data;
+    
+    if (!videoId) {
+      throw new Error(`Missing required field: videoId`);
+    }
+    
+    let localPath;
+    if (isLiveRecording && flvPath) {
+      // Live recording - file already exists locally
+      localPath = flvPath;
+      console.log(`Starting processing for live recording - videoId: ${videoId}, flvPath: ${flvPath}`);
+    } else if (objectName) {
+      // Regular upload - need to download from MinIO
+      localPath = path.join("temp", objectName);
+      console.log(`Starting processing for upload - videoId: ${videoId}, objectName: ${objectName}`);
+      await downloadRawVideoAndSave(objectName, localPath);
+      console.log(` Downloaded: ${localPath}`);
+    } else {
+      throw new Error(`Missing required fields: either objectName or flvPath must be provided`);
+    }
+
   const outputDir = path.join("temp", VIDEO_PROCESSING.OUTPUT_DIR_NAME);
   const thumbnailPath = path.join(outputDir, VIDEO_PROCESSING.THUMBNAIL_FILE_NAME);
-
-    
-    await downloadRawVideoAndSave(objectName, localPath);
-    console.log(` Downloaded: ${localPath}`);
 
     
     await chunkVideoWithWatermark(localPath, outputDir, videoId);
@@ -96,7 +137,8 @@ const processVideo = async (data, ack, nack) => {
 
     const thumbnailUrl = `${BUCKETS.THUMBNAILS}/${thumbnailObjectName}`;
     
-    console.log(` Finished processing ${objectName}`);
+    const processedItemName = objectName || flvPath;
+    console.log(` Finished processing ${processedItemName}`);
 
     await sendWebhook(videoId, thumbnailUrl, duration);
     
