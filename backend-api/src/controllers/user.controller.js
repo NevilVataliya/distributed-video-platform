@@ -178,7 +178,7 @@ const getUserVideos = asyncHandler(async (req, res) => {
     const videos = await Video.find({
         owner: user._id,
         status: { $in: [VIDEO_STATUS.READY, VIDEO_STATUS.LIVE] }
-    }).sort({ uploadDate: -1 });
+    }).populate("owner", "username fullName").sort({ uploadDate: -1 });
 
     return res.status(200).json(
         new ApiResponse(200, videos, "User videos fetched successfully")
