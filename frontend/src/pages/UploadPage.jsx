@@ -1,12 +1,23 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useState, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { AuthContext, api } from "../context/AuthContext";
 
 export default function UploadPage() {
   const [file, setFile] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
   const [status, setStatus] = useState("");
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+
+  if (!user) {
+    return (
+      <div style={{ padding: "40px 20px", textAlign: "center" }}>
+        <h2>Authentication Required</h2>
+        <p style={{marginBottom: "16px"}}>You must be logged in to upload videos.</p>
+        <Link to="/login" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 500 }}>Go to Login</Link>
+      </div>
+    );
+  }
 
   const handleUpload = async () => {
     if (!file) {
@@ -23,8 +34,8 @@ export default function UploadPage() {
     try {
       setStatus("Uploading...");
 
-      const res = await axios.post(
-        "http://localhost:3000/api/videos/upload",
+      const res = await api.post(
+        "/videos/upload",
         formData
       );
 
@@ -35,8 +46,8 @@ export default function UploadPage() {
       // 🔁 Polling every 5 sec
       const interval = setInterval(async () => {
         try {
-          const statusRes = await axios.get(
-            `http://localhost:3000/api/videos/${videoId}/status`
+          const statusRes = await api.get(
+            `/videos/${videoId}/status`
           );
 
           if (statusRes.data.status === "Processing") {
