@@ -103,7 +103,7 @@ const getVideoStatus = asyncHandler(async(req,res)=>{
 })
 
 const getAllReadyVideo = asyncHandler(async(req,res)=>{
-  const videos = await Video.find({status: { $in: [VIDEO_STATUS.READY, VIDEO_STATUS.LIVE] }}).sort({uploadDate:-1});
+  const videos = await Video.find({status: { $in: [VIDEO_STATUS.READY, VIDEO_STATUS.LIVE] }}).populate("owner","fullName username").sort({uploadDate:-1});
   if(!videos){
     throw new ApiError(400,"some error occured or no video is ready")
   }
@@ -114,7 +114,7 @@ const getAllReadyVideo = asyncHandler(async(req,res)=>{
 
 const getVideoById = asyncHandler(async(req , res)=>{
   const videoId = req.params.id;
-  const video = await Video.findById(videoId)
+  const video = await Video.findById(videoId).populate("owner","fullName username");
   if(!video){
     throw new ApiError(404,"Video not found")
   }
@@ -147,8 +147,8 @@ const updateVideoDetails = asyncHandler(async(req,res)=>{
       if (video.thumbnailUrl) {
           await deleteImage(video.thumbnailUrl);
       }
-      const newThumbnailUrl = await uploadImage(file.buffer);
-      video.thumbnailUrl = newThumbnailUrl;
+      const newThumbnailUrl = await uploadImage(file.buffer, file.originalname);
+      video.thumbnailUrl = newThumbnailUrl.path;
   }
   
   const updatedVideo = await video.save();
