@@ -13,7 +13,7 @@ export function LivePage() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const hlsUrl = `http://localhost:8080/live/${streamKey}/.m3u8`
+  const hlsUrl = `http://localhost:8080/live/${streamKey}.m3u8`
 
   useEffect(() => {
     let interval
