@@ -1,70 +1,63 @@
-import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { api } from '@/lib/api'
 
-export const AuthContext = createContext();
+const AuthContext = createContext(null)
 
-export const api = axios.create({
-  baseURL: "http://localhost:3000/api",
-});
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  // Restore session on mount
   useEffect(() => {
-    // Check if user is logged in
-    const checkUser = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          const res = await api.get("/users/me");
-          setUser(res.data.data);
-        }
-      } catch (err) {
-        console.error("Not authenticated", err);
-        localStorage.removeItem("accessToken");
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkUser();
-  }, []);
-
-  const login = async (username, password) => {
-    const res = await api.post("/users/login", { username, password });
-    const { user, accessToken } = res.data.data;
-    localStorage.setItem("accessToken", accessToken);
-    setUser(user);
-    return user;
-  };
-
-  const register = async (userData) => {
-    await api.post("/users/register", userData);
-    // Auto-login after registration
-    return login(userData.username, userData.password);
-  };
-
-  const logout = async () => {
-    try {
-      await api.post("/users/logout");
-    } catch (err) {
-      console.error(err);
+    const token = localStorage.getItem('hn_token')
+    if (!token || token === 'undefined' || token === 'null') { 
+      setLoading(false)
+      return 
     }
-    localStorage.removeItem("accessToken");
-    setUser(null);
-  };
+    
+    api.auth.me()
+      .then((data) => setUser(data.user || data))
+      .catch((err) => {
+        console.error("Session restore failed", err)
+        localStorage.removeItem('hn_token')
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const login = useCallback(async ({ username, password }) => {
+    const data = await api.auth.login({ username, password })
+    const token = data.accessToken || data.token
+    if (token) localStorage.setItem('hn_token', token)
+    
+    // Fetch user details immediately after saving token
+    const me = await api.auth.me()
+    setUser(me.user || me)
+    return me
+  }, [])
+
+  const register = useCallback(async (body) => {
+    // Register the user (backend does not return token here)
+    await api.auth.register(body)
+    
+    // Automatically log the user in using the credentials they just created
+    return login({ username: body.username, password: body.password })
+  }, [login])
+
+  const logout = useCallback(async () => {
+    try { await api.auth.logout() } catch {}
+    localStorage.removeItem('hn_token')
+    setUser(null)
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider')
+  return ctx
+}
