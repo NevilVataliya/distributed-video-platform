@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 export function VideoCard({ video }) {
   const [isHovered, setIsHovered] = useState(false)
   const id = video._id || video.id
-  console.log(video)
+  // console.log(video)
   const uploaderName = video.owner?.fullName || 'Unknown'
   const uploaderUsername = video.owner?.username || 'Unknown'
 
