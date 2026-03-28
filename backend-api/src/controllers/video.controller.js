@@ -156,10 +156,28 @@ const deleteVideo = asyncHandler(async (req,res)=>{
 
 
 
+const incrementVideoViews = asyncHandler(async (req, res) => {
+  const videoId = req.params.id;
+  const video = await Video.findByIdAndUpdate(
+    videoId,
+    { $inc: { views: 1 } },
+    { new: true }
+  );
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, { views: video.views }, "Video view count updated successfully")
+  );
+});
+
 export { uploadVideo,
   streamAuth,
   getAllReadyVideo,
   getVideoStatus,
+  incrementVideoViews,
   updateVideoDetails,
   getVideoById,
   deleteVideo };
