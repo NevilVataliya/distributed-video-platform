@@ -3,6 +3,8 @@ import {ApiError} from "../utils/ApiError.js"
 import {User} from "../models/User.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import crypto from "crypto";
+import { Video } from "../models/Video.model.js";
+import { VIDEO_STATUS } from "../constants.js";
 
 
 
@@ -160,6 +162,49 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 
+const getUserVideos = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+
+    if (!username) {
+        throw new ApiError(400, "Username is required");
+    }
+
+    const user = await User.findOne({ username: username.toLowerCase() });
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const videos = await Video.find({
+        owner: user._id,
+        status: { $in: [VIDEO_STATUS.READY, VIDEO_STATUS.LIVE] }
+    }).sort({ uploadDate: -1 });
+
+    return res.status(200).json(
+        new ApiResponse(200, videos, "User videos fetched successfully")
+    );
+});
+
+const regenerateStreamKey = asyncHandler(async (req, res) => {
+    const newStreamKey = crypto.randomBytes(8).toString("hex");
+    
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: { streamKey: newStreamKey }
+        },
+        { new: true }
+    );
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, { streamKey: user.streamKey }, "Stream key regenerated successfully")
+    );
+});
+
 export {registerUser,
-    loginUser,logoutUser,checkUsernameAvailability,getCurrentUser
+    loginUser,logoutUser,checkUsernameAvailability,getCurrentUser,getUserVideos,regenerateStreamKey
 }

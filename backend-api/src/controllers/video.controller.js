@@ -7,6 +7,8 @@ import { deleteImage, uploadImage, uploadToMinIO } from "../utils/minio.js";
 import { publishToQueue } from "../utils/rabbitmq.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { RABBITMQ, VIDEO_STATUS } from "../constants.js";
+import axios from "axios";
+import { XMLParser } from "fast-xml-parser";
 
 // Dummy image functions
 // const uploadImage = async (buffer) => {
@@ -28,7 +30,7 @@ const uploadVideo = asyncHandler(async(req , res )=>{
 
     let thumbnailUrl = "";
     if (thumbnailFile) {
-        const uploadImageRes = await uploadImage(thumbnailFile.buffer, thumbnailFile.originalname);
+        const uploadImageRes = await uploadImage(thumbnailFile.buffer, thumbnailFile.originalname,);
         thumbnailUrl = uploadImageRes.path;
     }
 
@@ -173,11 +175,55 @@ const incrementVideoViews = asyncHandler(async (req, res) => {
   );
 });
 
+const getLiveViewers = asyncHandler(async (req, res) => {
+    const { streamKey } = req.params;
+
+    if (!streamKey) {
+        throw new ApiError(400, "Stream key is required");
+    }
+
+    try {
+        const response = await axios.get("http://nginx-origin:80/stats");
+        const parser = new XMLParser();
+        const xmlData = parser.parse(response.data);
+        
+        let viewers = 0;
+        
+        const server = xmlData?.rtmp?.server;
+        
+        if (server && server.application) {
+            const applications = Array.isArray(server.application) ? server.application : [server.application];
+            
+            for (const app of applications) {
+                if (app.name === "live" && app.live && app.live.stream) {
+                    const streams = Array.isArray(app.live.stream) ? app.live.stream : [app.live.stream];
+                    const stream = streams.find((s) => s.name === streamKey);
+                    
+                    if (stream && stream.nsubscribers !== undefined) {
+                        viewers = parseInt(stream.nsubscribers, 10);
+                        if (isNaN(viewers)) viewers = parseInt(stream.nclients || "0", 10);
+                        break;
+                    } else if (stream && stream.nclients !== undefined) {
+                        viewers = parseInt(stream.nclients, 10);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return res.status(200).json({ viewers });
+    } catch (error) {
+        console.error("Error fetching live stats:", error.message);
+        return res.status(200).json({ viewers: 0 });
+    }
+});
+
 export { uploadVideo,
   streamAuth,
   getAllReadyVideo,
   getVideoStatus,
   incrementVideoViews,
+  getLiveViewers,
   updateVideoDetails,
   getVideoById,
   deleteVideo };
