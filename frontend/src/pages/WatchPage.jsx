@@ -79,7 +79,7 @@ export function WatchPage() {
       <div className="lg:col-span-2 xl:col-span-3 space-y-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* {console.log(video)} */}
-          <VideoPlayer src={video.hlsUrl} poster={`http://localhost:9000/${video.thumbnailUrl}`} autoPlay />
+          <VideoPlayer src={`http://localhost:9000/${video.hlsUrl}`} poster={`http://localhost:9000/${video.thumbnailUrl}`} autoPlay />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
