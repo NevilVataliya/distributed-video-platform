@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Video } from "../models/Video.model.js";
 import { User } from "../models/User.model.js";
 import { VIDEO_STATUS } from "../constants.js";
+import { publishToQueue } from "../utils/rabbitmq.js";
 
 const webhookUpdate = asyncHandler(async(req,res)=>{
   const {videoId, status, hlsUrl, thumbnailUrl,duration} = req.body;
@@ -33,7 +34,7 @@ const webhookUpdate = asyncHandler(async(req,res)=>{
 })
 
 
-//Can ignore this for now
+// not sure about this controller ; Need to discuss with others
 const webhookStreamStart = asyncHandler(async(req,res)=>{
     const {name} = req.body; // Stream key
     
@@ -57,4 +58,40 @@ const webhookStreamStart = asyncHandler(async(req,res)=>{
     return res.sendStatus(200);
 })
 
-export {webhookUpdate, webhookStreamStart}
+
+// not sure about this controller ; Need to discuss with others
+
+const webhookStreamEnd = asyncHandler(async(req, res) => {
+    const { name, path } = req.body; // Nginx sends stream key as 'name' and file path as 'path'
+    
+    if (!name || !path) {
+        return res.sendStatus(400);
+    }
+    
+    const user = await User.findOne({ streamKey: name });
+    if (!user) {
+        return res.sendStatus(401);
+    }
+
+    // Find the latest "Live" video for this user
+    const video = await Video.findOne({
+        owner: user._id,
+        status: VIDEO_STATUS.LIVE
+    }).sort({ _id: -1 });
+
+    if (video) {
+        video.status = VIDEO_STATUS.PROCESSING;
+        await video.save();
+
+        // Push to RabbitMQ for Vasu's worker
+        await publishToQueue("video-processing", {
+            videoId: video._id.toString(),
+            flvPath: path,
+            isLiveRecording: true
+        });
+    }
+
+    return res.sendStatus(200);
+});
+
+export {webhookUpdate, webhookStreamStart, webhookStreamEnd}
