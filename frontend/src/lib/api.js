@@ -51,6 +51,7 @@ export const api = {
     update: (id, payload, isFormData = false) => request('PATCH', `/videos/${id}`, isFormData ? { formData: payload } : { body: payload }),
     delete: (id) => request('DELETE', `/videos/${id}`),
     view: (id) => request('POST', `/videos/${id}/view`, { json: false }),
+    liveHeartbeat: (streamKey, viewerId) => request('POST', `/videos/live/${streamKey}/heartbeat`, { body: viewerId ? { viewerId } : {} }),
     liveStats: (streamKey) => request('GET', `/videos/live/${streamKey}/stats`),
   },
 

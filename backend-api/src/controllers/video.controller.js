@@ -181,7 +181,7 @@ const incrementVideoViews = asyncHandler(async (req, res) => {
   const video = await Video.findByIdAndUpdate(
     videoId,
     { $inc: { views: 1 } },
-    { new: true }
+    { returnDocument: 'after' }
   );
 
   if (!video) {
@@ -193,6 +193,30 @@ const incrementVideoViews = asyncHandler(async (req, res) => {
   );
 });
 
+const activeViewers = {};
+
+const liveStreamHeartbeat = asyncHandler(async (req, res) => {
+    const { streamKey } = req.params;
+    
+    if (!streamKey) {
+        throw new ApiError(400, "Stream key is required");
+    }
+    
+    const { viewerId } = req.body; //optional
+    // Extract the viewer's IP address to uniquely identify them
+    const uniqueIdentifier = viewerId || req.ip;
+    // console.log(`Received heartbeat from IP ${viewerIp} for stream ${streamKey}`);
+
+    if (!activeViewers[streamKey]) {
+        activeViewers[streamKey] = {};
+    }
+    
+    // Log the exact timestamp this viewer just pinged us
+    activeViewers[streamKey][uniqueIdentifier] = Date.now();
+
+    return res.status(200).json({ success: true });
+});
+
 const getLiveViewers = asyncHandler(async (req, res) => {
     const { streamKey } = req.params;
 
@@ -200,40 +224,26 @@ const getLiveViewers = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Stream key is required");
     }
 
-    try {
-        const response = await axios.get("http://localhost:8081/stats");
-        const parser = new XMLParser();
-        const xmlData = parser.parse(response.data);
-        
-        let viewers = 0;
-        
-        const server = xmlData?.rtmp?.server;
-        
-        if (server && server.application) {
-            const applications = Array.isArray(server.application) ? server.application : [server.application];
-            
-            for (const app of applications) {
-                if (app.name === "live" && app.live && app.live.stream) {
-                    const streams = Array.isArray(app.live.stream) ? app.live.stream : [app.live.stream];
-                    const stream = streams.find((s) => s.name === streamKey);
-                    
-                    if (stream && stream.nsubscribers !== undefined) {
-                        viewers = parseInt(stream.nsubscribers, 10);
-                        if (isNaN(viewers)) viewers = parseInt(stream.nclients || "0", 10);
-                        break;
-                    } else if (stream && stream.nclients !== undefined) {
-                        viewers = parseInt(stream.nclients, 10);
-                        break;
-                    }
-                }
-            }
-        }
-        
-        return res.status(200).json({ viewers });
-    } catch (error) {
-        console.error("Error fetching live stats:", error.message);
+    // If no one has ever pinged this stream, return 0
+    if (!activeViewers[streamKey]) {
         return res.status(200).json({ viewers: 0 });
     }
+
+    const now = Date.now();
+    let currentViewerCount = 0;
+
+    // Loop through the viewers for this specific stream
+    for (const [ip, lastSeen] of Object.entries(activeViewers[streamKey])) {
+        // If the viewer pinged within the last 15 seconds, they are still watching!
+        if (now - lastSeen < 15000) { 
+            currentViewerCount++;
+        } else {
+            // If they haven't pinged in 15 seconds, they closed the tab. Delete them.
+            delete activeViewers[streamKey][ip];
+        }
+    }
+
+    return res.status(200).json({ viewers: currentViewerCount });
 });
 
 export { uploadVideo,
@@ -244,4 +254,5 @@ export { uploadVideo,
   getLiveViewers,
   updateVideoDetails,
   getVideoById,
-  deleteVideo };
+  deleteVideo,
+  liveStreamHeartbeat };

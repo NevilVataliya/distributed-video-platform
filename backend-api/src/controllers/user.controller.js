@@ -193,7 +193,7 @@ const regenerateStreamKey = asyncHandler(async (req, res) => {
         {
             $set: { streamKey: newStreamKey }
         },
-        { new: true }
+        { returnDocument: 'after' }
     );
 
     if (!user) {

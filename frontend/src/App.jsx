@@ -11,7 +11,6 @@ import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ChannelPage } from '@/pages/ChannelPage'
 import { SettingsPage } from '@/pages/SettingsPage'
-import { LivePage } from '@/pages/LivePage'
 
 function App() {
   return (
@@ -32,7 +31,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/channel/:username" element={<ChannelPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/live/:streamKey" element={<LivePage />} />
+          <Route path="/live/:id" element={<WatchPage />} />
         </Route>
 
         <Route path="/login" element={<LoginPage />} />
