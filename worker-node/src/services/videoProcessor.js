@@ -3,7 +3,7 @@ import path from "path";
 import { exec, spawn } from "child_process";
 import { chunkVideoWithWatermark, clearTempFolder } from "./chunkVideo.js";
 import { sendWebhook } from "../utils/sendWebhook.js";
-import { BUCKETS, VIDEO_PROCESSING } from "../constants.js";
+import { BUCKETS, MINIO, VIDEO_PROCESSING } from "../constants.js";
 
 
 const downloadRawVideoAndSave = async (name, localPath) => {
@@ -96,6 +96,7 @@ const processVideo = async (data, ack, nack) => {
   try {
     console.log(`Received data:`, JSON.stringify(data));
     const { videoId, objectName, flvPath, isLiveRecording } = data;
+    const hasCustomThumbnail = data.hasCustomThumbnail ?? data.thumbnail ?? false;
     
     if (!videoId) {
       throw new Error(`Missing required field: videoId`);
@@ -116,17 +117,22 @@ const processVideo = async (data, ack, nack) => {
       throw new Error(`Missing required fields: either objectName or flvPath must be provided`);
     }
 
-  const outputDir = path.join("temp", VIDEO_PROCESSING.OUTPUT_DIR_NAME);
-  const thumbnailPath = path.join(outputDir, VIDEO_PROCESSING.THUMBNAIL_FILE_NAME);
+     const outputDir = path.join("temp", VIDEO_PROCESSING.OUTPUT_DIR_NAME);
+     const thumbnailPath = path.join(outputDir, VIDEO_PROCESSING.THUMBNAIL_FILE_NAME);
+
+    let thumbnailUrl;
 
     
     await chunkVideoWithWatermark(localPath, outputDir, videoId);
 
-    await generateThumbnail(localPath, thumbnailPath);
-    const duration = await extractDurationMMSS(localPath);
 
-    const thumbnailObjectName = `${videoId}/${VIDEO_PROCESSING.THUMBNAIL_FILE_NAME}`;
-    await uploadImage(thumbnailPath, thumbnailObjectName, BUCKETS.THUMBNAILS);
+    const duration = await extractDurationMMSS(localPath);
+    if (!hasCustomThumbnail) {
+      await generateThumbnail(localPath, thumbnailPath);
+      const thumbnailObjectName = `${videoId}.jpg`;
+      await uploadImage(thumbnailPath, thumbnailObjectName);
+      thumbnailUrl = `${BUCKETS.THUMBNAILS}/${thumbnailObjectName}`;
+    }
 
     
     await uploadHLSFolder(
@@ -135,12 +141,12 @@ const processVideo = async (data, ack, nack) => {
       videoId
     );
 
-    const thumbnailUrl = `${BUCKETS.THUMBNAILS}/${thumbnailObjectName}`;
+    
     
     const processedItemName = objectName || flvPath;
     console.log(` Finished processing ${processedItemName}`);
 
-    await sendWebhook(videoId, thumbnailUrl, duration);
+    await sendWebhook(videoId, duration, thumbnailUrl);
     
     await clearTempFolder();
 

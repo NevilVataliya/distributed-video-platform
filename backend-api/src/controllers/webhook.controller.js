@@ -15,9 +15,9 @@ const webhookUpdate = asyncHandler(async(req,res)=>{
   
   if(status !== undefined) video.status = status;
   if(hlsUrl !== undefined) video.hlsUrl = hlsUrl;
-  // if(video.thumbnailUrl==""){
-    if(thumbnailUrl !== undefined) video.thumbnailUrl = thumbnailUrl; //todo: check if thumbnail is already there or not
-  // }
+  if (thumbnailUrl !== undefined && thumbnailUrl !== null && thumbnailUrl !== "") {
+    video.thumbnailUrl = thumbnailUrl;
+  }
   if(duration !== undefined) video.duration = duration;
   
   const updatedV = await video.save();

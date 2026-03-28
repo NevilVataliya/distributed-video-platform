@@ -9,6 +9,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { RABBITMQ, VIDEO_STATUS } from "../constants.js";
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
+import path from "path";
 
 // Dummy image functions
 // const uploadImage = async (buffer) => {
@@ -28,11 +29,19 @@ const uploadVideo = asyncHandler(async(req , res )=>{
         throw new ApiError(400,"No video file uploaded")
     }
 
-    let thumbnailUrl = "";
-    if (thumbnailFile) {
-        const uploadImageRes = await uploadImage(thumbnailFile.buffer, thumbnailFile.originalname,);
-        thumbnailUrl = uploadImageRes.path;
+    if (!videoFile.mimetype?.startsWith("video/")) {
+      throw new ApiError(400, "Invalid video file. Please upload a video in the 'video' field.");
     }
+
+    if (thumbnailFile && !thumbnailFile.mimetype?.startsWith("image/")) {
+      throw new ApiError(400, "Invalid thumbnail file. Please upload an image in the 'thumbnail' field.");
+    }
+
+    // let thumbnailUrl = "";
+    // if (thumbnailFile) {
+    //     const uploadImageRes = await uploadImage(thumbnailFile.buffer, thumbnailFile.originalname,);
+    //     thumbnailUrl = uploadImageRes.path;
+    // }
 
     const objectName = `${Date.now()}-${videoFile.originalname}`;
     await uploadToMinIO(videoFile.buffer, objectName);
@@ -42,20 +51,29 @@ const uploadVideo = asyncHandler(async(req , res )=>{
       title: title || videoFile.originalname,
       description: description || "",
       status: VIDEO_STATUS.PROCESSING,
-      thumbnailUrl: thumbnailUrl,
+      thumbnailUrl: null,
       owner: req.user?._id
     });
+   if(thumbnailFile){
+    const extenstion = path.extname(thumbnailFile.originalname).toLowerCase();
+    const thumnailPath = `${video._id}${extenstion}`;
+    const uploadImageRes = await uploadImage(thumbnailFile.buffer, thumnailPath);
+    video.thumbnailUrl =  uploadImageRes.path;
+    await video.save();
+   }
 
     await publishToQueue(RABBITMQ.QUEUES.VIDEO_PROCESSING,{
       videoId: video._id.toString(),
       objectName,
-      thumbnail: !!thumbnailUrl,
+      hasCustomThumbnail: !!thumbnailFile,
     });
+
+    console.log(`thumbnailUrl: ${video.thumbnailUrl}`);
 
     return res.status(200).json({
       message: VIDEO_STATUS.PROCESSING,
       videoId: video._id.toString(),
-      thumbnailUrl: thumbnailUrl
+      thumbnailUrl: video.thumbnailUrl || null
     });
 });
 
