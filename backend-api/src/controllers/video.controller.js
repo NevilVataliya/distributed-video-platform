@@ -201,7 +201,7 @@ const getLiveViewers = asyncHandler(async (req, res) => {
     }
 
     try {
-        const response = await axios.get("http://nginx-origin:80/stats");
+        const response = await axios.get("http://localhost:8081/stats");
         const parser = new XMLParser();
         const xmlData = parser.parse(response.data);
         
