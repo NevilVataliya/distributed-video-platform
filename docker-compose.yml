@@ -58,6 +58,7 @@ services:
       - ./nginx-edge/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - nginx-origin
+    restart: unless-stopped
 
   # 5b. Second Edge Container (Identical to Edge 1)
   nginx-edge-2:
@@ -67,6 +68,7 @@ services:
       - ./nginx-edge/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - nginx-origin
+    restart: unless-stopped
 
   # 6. The Load Balancer
   nginx-loadbalancer:
@@ -79,6 +81,7 @@ services:
     depends_on:
       - nginx-edge-1
       - nginx-edge-2
+    restart: unless-stopped
 
 
   # 7. Video Processing Worker (Scalable)
