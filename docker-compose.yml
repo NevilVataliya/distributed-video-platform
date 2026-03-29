@@ -50,6 +50,8 @@ services:
       - recordings_data:/tmp/recordings
     command: /bin/sh -c "chmod 777 /tmp/recordings && nginx -g 'daemon off;'"
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     # 5a. First Edge Container
   nginx-edge-1:
