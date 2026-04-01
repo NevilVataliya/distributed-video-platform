@@ -120,6 +120,26 @@ export const deleteImage = async (objectName, bucketName = THUMBNAILS_BUCKET) =>
 		throw new Error("deleteImage requires objectName and bucketName.");
 	}
 
+	const normalizedObjectName = objectName.startsWith(`${bucketName}/`)
+		? objectName.slice(bucketName.length + 1)
+		: objectName;
+
+	await ensureBucketExists(bucketName);
+	await minioClient.removeObject(bucketName, normalizedObjectName);
+};
+
+export const deleteObjectByStoragePath = async (storagePath) => {
+	if (!storagePath || typeof storagePath !== "string") {
+		return;
+	}
+
+	const [bucketName, ...objectParts] = storagePath.split("/");
+	const objectName = objectParts.join("/");
+
+	if (!bucketName || !objectName) {
+		return;
+	}
+
 	await ensureBucketExists(bucketName);
 	await minioClient.removeObject(bucketName, objectName);
 };

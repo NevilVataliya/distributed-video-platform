@@ -2,7 +2,7 @@ import { Video } from "../models/Video.model.js";
 import { User } from "../models/User.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { deleteImage, uploadImage, uploadToMinIO } from "../utils/minio.js";
+import { deleteImage, deleteObjectByStoragePath, uploadImage, uploadToMinIO } from "../utils/minio.js";
 
 import { publishToQueue } from "../utils/rabbitmq.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -102,6 +102,69 @@ const getVideoStatus = asyncHandler(async(req,res)=>{
   )
 })
 
+const streamVideoEvents = asyncHandler(async (req, res) => {
+  const videoId = req.params.id;
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  const sendEvent = (event, payload) => {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  };
+
+  const getPayload = (video) => ({
+    id: video._id?.toString?.() || videoId,
+    status: video.status,
+    hlsUrl: video.hlsUrl || null,
+    thumbnailUrl: video.thumbnailUrl || null,
+    duration: video.duration ?? null,
+  });
+
+  const initialVideo = await Video.findById(videoId).lean();
+  if (!initialVideo) {
+    sendEvent("error", { message: "Video not found" });
+    res.end();
+    return;
+  }
+
+  let lastPayload = getPayload(initialVideo);
+  sendEvent("video-update", lastPayload);
+
+  const pollInterval = setInterval(async () => {
+    try {
+      const latest = await Video.findById(videoId).lean();
+      if (!latest) {
+        sendEvent("error", { message: "Video not found" });
+        clearInterval(pollInterval);
+        clearInterval(keepAliveInterval);
+        res.end();
+        return;
+      }
+
+      const nextPayload = getPayload(latest);
+      if (JSON.stringify(nextPayload) !== JSON.stringify(lastPayload)) {
+        lastPayload = nextPayload;
+        sendEvent("video-update", nextPayload);
+      }
+    } catch {
+      sendEvent("error", { message: "Unable to fetch video updates" });
+    }
+  }, 3000);
+
+  const keepAliveInterval = setInterval(() => {
+    res.write(": ping\n\n");
+  }, 20000);
+
+  req.on("close", () => {
+    clearInterval(pollInterval);
+    clearInterval(keepAliveInterval);
+  });
+});
+
 const getAllReadyVideo = asyncHandler(async(req,res)=>{
   const videos = await Video.find({status: { $in: [VIDEO_STATUS.READY, VIDEO_STATUS.LIVE] }}).populate("owner","fullName username").sort({uploadDate:-1});
   if(!videos){
@@ -166,6 +229,15 @@ const deleteVideo = asyncHandler(async (req,res)=>{
   if(video.owner?.toString() !== req.user?._id?.toString()){
     throw new ApiError(403,"You are not authorized to delete this video")
   }
+
+  if (video.thumbnailUrl) {
+    await deleteImage(video.thumbnailUrl).catch(() => {});
+  }
+
+  if (video.hlsUrl) {
+    await deleteObjectByStoragePath(video.hlsUrl).catch(() => {});
+  }
+
   await Video.findByIdAndDelete(videoId)
   return res.status(200).json(
     new ApiResponse(200,{},"Video deleted successfully")
@@ -250,6 +322,7 @@ export { uploadVideo,
   streamAuth,
   getAllReadyVideo,
   getVideoStatus,
+  streamVideoEvents,
   incrementVideoViews,
   getLiveViewers,
   updateVideoDetails,

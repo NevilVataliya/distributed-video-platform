@@ -47,6 +47,7 @@ export const api = {
   videos: {
     getAll: () => request('GET', '/videos'),
     getById: (id) => request('GET', `/videos/${id}`),
+    eventsUrl: (id) => `${BASE}/videos/${id}/events`,
     upload: (formData) => request('POST', '/videos/upload', { formData }),
     update: (id, payload, isFormData = false) => request('PATCH', `/videos/${id}`, isFormData ? { formData: payload } : { body: payload }),
     delete: (id) => request('DELETE', `/videos/${id}`),
