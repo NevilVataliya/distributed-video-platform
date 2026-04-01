@@ -38,12 +38,16 @@ export function WatchPage() {
   const [liveViewers, setLiveViewers] = useState(0)
   const viewRecorded = useRef(null)
   const viewerIdRef = useRef(getSessionViewerId())
+  const prevStatusRef = useRef('')
+  const completionToastRef = useRef(null)
 
   useEffect(() => {
     if (!id) {
       setVideo(null)
       setRelated([])
       setLoading(false)
+      prevStatusRef.current = ''
+      completionToastRef.current = null
       return
     }
 
@@ -91,6 +95,23 @@ export function WatchPage() {
   }, [id])
 
   useEffect(() => {
+    const currentStatus = String(video?.status || '').toLowerCase()
+    const prevStatus = prevStatusRef.current
+
+    if (completionToastRef.current !== id && prevStatus === 'processing' && currentStatus === 'ready') {
+      toast.success('Video processing finished. Your video is ready to watch!')
+      completionToastRef.current = id
+    }
+
+    if (completionToastRef.current !== id && prevStatus === 'processing' && currentStatus === 'failed') {
+      toast.error('Video processing failed. Please try uploading again.')
+      completionToastRef.current = id
+    }
+
+    prevStatusRef.current = currentStatus
+  }, [id, video?.status])
+
+  useEffect(() => {
     let heartbeatInterval
     let statsInterval
 
@@ -123,6 +144,73 @@ export function WatchPage() {
       clearInterval(statsInterval)
     }
   }, [video])
+
+  useEffect(() => {
+    if (!id) return
+
+    const eventSource = new EventSource(api.videos.eventsUrl(id))
+
+    const onVideoUpdate = (event) => {
+      try {
+        const next = JSON.parse(event.data)
+        setVideo((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            status: next.status ?? prev.status,
+            hlsUrl: next.hlsUrl ?? prev.hlsUrl,
+            thumbnailUrl: next.thumbnailUrl ?? prev.thumbnailUrl,
+            duration: next.duration ?? prev.duration,
+          }
+        })
+      } catch {
+        // Ignore malformed events and keep current UI state.
+      }
+    }
+
+    const onError = () => {
+      // Keep connection open; EventSource auto-reconnects on transient failures.
+    }
+
+    eventSource.addEventListener('video-update', onVideoUpdate)
+    eventSource.addEventListener('error', onError)
+
+    return () => {
+      eventSource.removeEventListener('video-update', onVideoUpdate)
+      eventSource.removeEventListener('error', onError)
+      eventSource.close()
+    }
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+
+    const currentStatus = String(video?.status || '').toLowerCase()
+    if (currentStatus && currentStatus !== 'processing') return
+
+    const interval = setInterval(() => {
+      api.videos.getById(id)
+        .then((next) => {
+          setVideo((prev) => {
+            if (!prev) return next
+            return {
+              ...prev,
+              status: next.status ?? prev.status,
+              hlsUrl: next.hlsUrl ?? prev.hlsUrl,
+              thumbnailUrl: next.thumbnailUrl ?? prev.thumbnailUrl,
+              duration: next.duration ?? prev.duration,
+            }
+          })
+        })
+        .catch((err) => {
+          if (err?.status === 404) {
+            setVideo(null)
+          }
+        })
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [id, video?.status])
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -160,7 +248,7 @@ export function WatchPage() {
   const uploaderUsername = video.owner?.username || 'Unknown'
   const isLiveVideo = String(video.status || '').toLowerCase() === 'live'
   const isLiveHls = Boolean(getLiveStreamKey(video.hlsUrl))
-  const playbackSrc = isLiveHls ? `http://localhost:8080/${video.hlsUrl}` : `http://localhost:9000/${video.hlsUrl}`
+  const playbackSrc = video.hlsUrl ? (isLiveHls ? `http://localhost:8080/${video.hlsUrl}` : `http://localhost:9000/${video.hlsUrl}`) : ''
   const playbackPoster = video.thumbnailUrl ? `http://localhost:9000/${video.thumbnailUrl}` : undefined
 
   return (
