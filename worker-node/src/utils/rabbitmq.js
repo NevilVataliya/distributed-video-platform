@@ -21,9 +21,10 @@ export const consumeQueue = async (queueName, processingFunction) => {
 
     try {
       await processingFunction(
+        console.log(data),
         data,
-        () => channel.ack(msg),                // ✅ success
-        () => channel.nack(msg, false, false) // ❌ fail (no retry)
+        () => channel.ack(msg),                // video processing successful
+        () => channel.nack(msg, false, false) // video processing fails
       );
     } catch (err) {
       console.error("Processing error:", err);

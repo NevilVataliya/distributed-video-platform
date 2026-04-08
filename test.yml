@@ -1,0 +1,12 @@
+config:
+  target: "http://localhost:3000" # Backend's API port
+  phases:
+    - duration: 60     # Run the test for 60 seconds
+      arrivalRate: 50  # 50 new users click on the site every second
+      name: "Sustained load spike"
+scenarios:
+  - name: "User loads the home feed"
+    flow:
+      - get:
+          url: "/api/videos"
+          # This simulates 50 users a second asking MongoDB for the video list
