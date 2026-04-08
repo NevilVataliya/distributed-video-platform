@@ -19,9 +19,9 @@ export const consumeQueue = async (queueName, processingFunction) => {
 
     const data = JSON.parse(msg.content.toString());
 
+    // console.log(data);
     try {
       await processingFunction(
-        console.log(data),
         data,
         () => channel.ack(msg),                // video processing successful
         () => channel.nack(msg, false, false) // video processing fails

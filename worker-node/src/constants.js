@@ -1,10 +1,12 @@
+import "dotenv/config";
+
 export const QUEUES = {
 	VIDEO_PROCESSING: "video-processing",
 };
 
 export const RABBITMQ = {
-	URL: "amqp://rabbitmq:5672",
-	PREFETCH_COUNT: 1,
+	URL: process.env.RABBITMQ_URL || "amqp://rabbitmq:5672",
+	PREFETCH_COUNT: Number(process.env.PREFETCH_COUNT || 1),
 };
 
 export const BUCKETS = {
@@ -14,15 +16,15 @@ export const BUCKETS = {
 };
 
 export const MINIO = {
-	ENDPOINT: "minio",
-	PORT: 9000,
-	USE_SSL: false,
-	REGION: "us-east-1",
-	PUBLIC_BASE_URL: "http://localhost:9000",
+	ENDPOINT: process.env.MINIO_ENDPOINT || "minio",
+	PORT: Number(process.env.MINIO_PORT || 9000),
+	USE_SSL: String(process.env.MINIO_USE_SSL || "false").toLowerCase() === "true",
+	REGION: process.env.MINIO_REGION || "us-east-1",
+	PUBLIC_BASE_URL: process.env.MINIO_PUBLIC_BASE_URL || "http://localhost:9000",
 };
 
 export const WEBHOOK = {
-	BASE_URL: "http://host.docker.internal:3000",
+	BASE_URL: process.env.WEBHOOK_BASE_URL || "http://host.docker.internal:3000",
 	PROCESSING_DONE_PATH: "/api/webhooks/processing-done",
 	STATUS_READY: "Ready",
 	STATUS_FAILED: "Failed",

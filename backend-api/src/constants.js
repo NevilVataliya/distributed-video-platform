@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 export const APP = {
 	PORT: 3000,
 	JSON_LIMIT: "16kb",
@@ -7,21 +9,21 @@ export const APP = {
 };
 
 export const DB = {
-	NAME: "VideoDS",
+	NAME: process.env.DB_NAME || "VideoDS",
 };
 
 export const RABBITMQ = {
-	URL: "amqp://localhost",
+	URL: process.env.RABBITMQ_URL || "amqp://localhost",
 	QUEUES: {
 		VIDEO_PROCESSING: "video-processing",
 	},
 };
 
 export const MINIO = {
-	ENDPOINT: "localhost",
-	PORT: 9000,
-	USE_SSL: false,
-	REGION: "us-east-1",
+	ENDPOINT: process.env.MINIO_ENDPOINT || "localhost",
+	PORT: Number(process.env.MINIO_PORT || 9000),
+	USE_SSL: String(process.env.MINIO_USE_SSL || "false").toLowerCase() === "true",
+	REGION: process.env.MINIO_REGION || "us-east-1",
 	BUCKETS: {
 		RAW_VIDEOS: "raw-videos",
 		THUMBNAILS: "thumbnails",
