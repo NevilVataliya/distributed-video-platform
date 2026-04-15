@@ -10,10 +10,17 @@ dotenv.config();
 await connectDB();
 const app = express();
 
+const corsOrigin = process.env.CORS_ORIGIN || "*";
+const allowedOrigins = corsOrigin
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
+    origin: corsOrigin === "*" ? true : allowedOrigins,
+    credentials: corsOrigin !== "*"
 }));
+
 app.use(express.json({ limit: APP.JSON_LIMIT }))
 app.use(express.urlencoded({ extended: true, limit: APP.URLENCODED_LIMIT }))
 app.use(express.static(APP.STATIC_DIR))
