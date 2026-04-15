@@ -1,4 +1,6 @@
-const BASE = 'http://localhost:3000/api'
+import { URLS } from '@/lib/urls'
+
+const BASE = URLS.API_BASE
 
 function getToken() {
   const token = localStorage.getItem('hn_token')

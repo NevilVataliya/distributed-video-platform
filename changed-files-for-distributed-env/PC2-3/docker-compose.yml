@@ -1,0 +1,28 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: hexanodes_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    command: ["mongod", "--bind_ip_all", "--replSet", "rs0"]
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio
+    container_name: hexanodes_minio
+    ports:
+      - "9000:9000" 
+      - "9001:9001" 
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server http://192.168.1.10:9000/data http://192.168.1.11:9000/data http://192.168.1.12:9000/data http://192.168.1.13:9000/data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  minio_data:

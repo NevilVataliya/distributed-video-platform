@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { timeAgo, formatViews, formatDuration } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { URLS, buildUrl } from '@/lib/urls'
 
 export function VideoCard({ video }) {
   const [isHovered, setIsHovered] = useState(false)
@@ -26,7 +27,7 @@ export function VideoCard({ video }) {
       <Link to={`/watch/${id}`} className="block relative aspect-video w-full overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
         {video.thumbnailUrl ? (
           <img
-            src={`http://localhost:9000/${video.thumbnailUrl}`}
+            src={buildUrl(URLS.MINIO_BASE, video.thumbnailUrl)}
             alt={video.title}
             className={cn(
               "h-full w-full object-cover transition-transform duration-500",

@@ -1,0 +1,9 @@
+services:
+  nginx-edge:
+    image: nginx:latest
+    container_name: hexanodes_edge
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx-edge/nginx.conf:/etc/nginx/nginx.conf
+    restart: unless-stopped

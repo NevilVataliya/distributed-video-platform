@@ -1,0 +1,16 @@
+services:
+  frontend:
+    image: node:20-alpine
+    container_name: hexanodes_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      VITE_API_BASE_URL: http://192.168.1.14:3000 
+      VITE_LOAD_BALANCER_URL: http://192.168.1.15:8080
+    ports:
+      - "5173:5173"
+    restart: unless-stopped

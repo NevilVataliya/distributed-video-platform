@@ -20,6 +20,8 @@ export const MINIO = {
 	PORT: Number(process.env.MINIO_PORT || 9000),
 	USE_SSL: String(process.env.MINIO_USE_SSL || "false").toLowerCase() === "true",
 	REGION: process.env.MINIO_REGION || "us-east-1",
+	ACCESS_KEY: process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "admin",
+	SECRET_KEY: process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "password123",
 	PUBLIC_BASE_URL: process.env.MINIO_PUBLIC_BASE_URL || "http://localhost:9000",
 };
 

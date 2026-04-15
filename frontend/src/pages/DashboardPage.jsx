@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { timeAgo, formatViews } from '@/lib/utils'
+import { URLS, buildUrl } from '@/lib/urls'
 
 export function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
@@ -154,7 +155,7 @@ export function DashboardPage() {
                   <div className="sm:col-span-7 flex items-start gap-4">
                     <div className="relative w-24 sm:w-32 aspect-video rounded-md overflow-hidden bg-muted flex-shrink-0 border border-border shadow-sm">
                       {vid.thumbnailUrl ? (
-                        <img src={`http://localhost:9000/${vid.thumbnailUrl}`} className="w-full h-full object-cover" alt="" />
+                        <img src={buildUrl(URLS.MINIO_BASE, vid.thumbnailUrl)} className="w-full h-full object-cover" alt="" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-secondary/50">
                           <Play className="w-6 h-6 text-muted-foreground/30" />

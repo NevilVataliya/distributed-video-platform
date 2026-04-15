@@ -79,6 +79,9 @@ services:
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
     environment:
       CHOKIDAR_USEPOLLING: "true"
+      VITE_API_BASE_URL: http://localhost:3000
+      VITE_MINIO_BASE_URL: http://localhost:9000
+      VITE_LIVE_BASE_URL: http://localhost:8080
     ports:
       - "5173:5173"
     depends_on:
@@ -145,11 +148,16 @@ services:
     command: sh -c "apk add --no-cache ffmpeg ttf-dejavu fontconfig && npm install && npm run dev"
     environment:
       RABBITMQ_URL: amqp://rabbitmq:5672
+      PREFETCH_COUNT: 1
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
+      MINIO_REGION: us-east-1
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: password123
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+      MINIO_PUBLIC_BASE_URL: http://localhost:9000
       WEBHOOK_BASE_URL: http://backend-api:3000
     depends_on:
       - rabbitmq

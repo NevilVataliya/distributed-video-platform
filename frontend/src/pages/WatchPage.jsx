@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatViews, timeAgo } from '@/lib/utils'
+import { URLS, buildUrl } from '@/lib/urls'
 
 function getLiveStreamKey(hlsUrl = '') {
   const match = /^live\/([^/.]+)\.m3u8$/i.exec(hlsUrl)
@@ -248,8 +249,10 @@ export function WatchPage() {
   const uploaderUsername = video.owner?.username || 'Unknown'
   const isLiveVideo = String(video.status || '').toLowerCase() === 'live'
   const isLiveHls = Boolean(getLiveStreamKey(video.hlsUrl))
-  const playbackSrc = video.hlsUrl ? (isLiveHls ? `http://localhost:8080/${video.hlsUrl}` : `http://localhost:9000/${video.hlsUrl}`) : ''
-  const playbackPoster = video.thumbnailUrl ? `http://localhost:9000/${video.thumbnailUrl}` : undefined
+  const playbackSrc = video.hlsUrl
+    ? (isLiveHls ? buildUrl(URLS.LIVE_BASE, video.hlsUrl) : buildUrl(URLS.MINIO_BASE, video.hlsUrl))
+    : ''
+  const playbackPoster = video.thumbnailUrl ? buildUrl(URLS.MINIO_BASE, video.thumbnailUrl) : undefined
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-400 mx-auto">

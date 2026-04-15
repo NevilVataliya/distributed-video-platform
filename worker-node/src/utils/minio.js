@@ -7,10 +7,8 @@ import { BUCKETS, MINIO } from "../constants.js";
 const MINIO_ENDPOINT = MINIO.ENDPOINT;
 const MINIO_PORT = parseInt(String(MINIO.PORT), 10);
 const MINIO_USE_SSL = MINIO.USE_SSL;
-const MINIO_ACCESS_KEY =
-	process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER || "minioadmin";
-const MINIO_SECRET_KEY =
-	process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD || "minioadmin";
+const MINIO_ACCESS_KEY = MINIO.ACCESS_KEY;
+const MINIO_SECRET_KEY = MINIO.SECRET_KEY;
 
 const RAW_VIDEOS_BUCKET = BUCKETS.RAW_VIDEOS;
 const PROCESSED_VIDEOS_BUCKET = BUCKETS.PROCESSED_VIDEOS;
