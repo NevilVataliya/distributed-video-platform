@@ -9,13 +9,13 @@ services:
       - recordings_data:/tmp/recordings
     command: sh -c "apk add --no-cache ffmpeg ttf-dejavu fontconfig && npm install && npm run dev"
     environment:
-      RABBITMQ_URL: amqp://192.168.1.10:5672
-      MINIO_ENDPOINT: 192.168.1.10
+      RABBITMQ_URL: amqp://[PC1_IP]:5672
+      MINIO_ENDPOINT: [PC1_IP]
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: password123
-      WEBHOOK_BASE_URL: http://192.168.1.14:3000
+      WEBHOOK_BASE_URL: http://[PC5_IP]:3000
     restart: unless-stopped
 
 volumes:

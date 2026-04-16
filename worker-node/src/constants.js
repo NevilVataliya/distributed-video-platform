@@ -34,7 +34,7 @@ export const WEBHOOK = {
 
 export const VIDEO_PROCESSING = {
 	CHUNK_SECONDS: 6,
-	WATERMARK_TEXT: "Sample Watermark",
+	WATERMARK_TEXT: "HexaNodes",
 	OUTPUT_DIR_NAME: "output",
 	THUMBNAIL_FILE_NAME: "thumbnail.jpg",
 	THUMBNAIL_CAPTURE_AT: "00:00:02",

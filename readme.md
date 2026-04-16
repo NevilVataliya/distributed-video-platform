@@ -148,7 +148,7 @@ Minimum recommended variables:
 PORT=3000
 CORS_ORIGIN=http://localhost:5173
 
-MONGO_URI=mongodb://localhost:27017
+MONGO_URI=mongodb://localhost:27017/VideoDS
 
 ACCESS_TOKEN_SECRET=your_access_secret
 ACCESS_TOKEN_EXPIRY=1d

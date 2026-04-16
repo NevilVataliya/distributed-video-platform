@@ -8,7 +8,7 @@ services:
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password123
-    command: server http://192.168.1.10:9000/data http://192.168.1.11:9000/data http://192.168.1.12:9000/data http://192.168.1.13:9000/data --console-address ":9001"
+    command: server http://[PC1_IP]:9000/data http://[PC2_IP]:9000/data http://[PC3_IP]:9000/data http://[PC4_IP]:9000/data --console-address ":9001"
     volumes:
       - minio_data:/data
     restart: unless-stopped
