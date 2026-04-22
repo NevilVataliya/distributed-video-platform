@@ -1,0 +1,91 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 20
+      name: "Full API Load Test"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Full API Workflow Test"
+    flow:
+
+      # Register User
+      - post:
+          url: "/api/users/register"
+          json:
+            fullName: "Load Test User"
+            username: "user{{ $randomString() }}"
+            email: "user{{ $randomInt(1000,9999) }}@test.com"
+            password: "123456"
+
+      # Login User
+      - post:
+          url: "/api/users/login"
+          json:
+            username: "parth123"
+            password: "123456"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # Get Current User
+      - get:
+          url: "/api/users/me"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+      # Get All Videos
+      - get:
+          url: "/api/videos"
+
+      # View Count Test (replace ID)
+      - post:
+          url: "/api/videos/123456789/view"
+
+      # Get Video By ID
+      - get:
+          url: "/api/videos/123456789"
+
+      # Update Video
+      - patch:
+          url: "/api/videos/123456789"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Updated By Load Test"
+
+      # User Videos
+      - get:
+          url: "/api/users/parth123/videos"
+
+      # Regenerate Stream Key
+      - post:
+          url: "/api/users/streamkey/regenerate"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          capture:
+            - json: "$.streamKey"
+              as: "streamKey"
+
+      # Live Stream Stats
+      - get:
+          url: "/api/videos/live/{{ streamKey }}/stats"
+
+      # Webhook Processing Done
+      - post:
+          url: "/api/webhooks/processing-done"
+          json:
+            id: "123456789"
+            status: "Ready"
+            hlsUrl: "http://test.com/video.m3u8"
+            thumbnailUrl: "http://test.com/thumb.jpg"
+            duration: "10:00"
+
+      # Logout
+      - post:
+          url: "/api/users/logout"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
