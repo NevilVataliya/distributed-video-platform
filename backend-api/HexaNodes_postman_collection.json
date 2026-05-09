@@ -1,0 +1,422 @@
+{
+    "info": {
+        "name": "HexaNodes Final API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "BASE_URL",
+            "value": "http://localhost:3000"
+        },
+        {
+            "key": "token",
+            "value": ""
+        },
+        {
+            "key": "id",
+            "value": ""
+        },
+        {
+            "key": "streamKey",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth - Register",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/users/register",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "register"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"fullName\": \"Parth Modi\",\n  \"username\": \"parth123\",\n  \"email\": \"parth@test.com\",\n  \"password\": \"123456\"\n}"
+                }
+            }
+        },
+        {
+            "name": "Auth - Login",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/users/login",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "login"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"username\": \"parth123\",\n  \"password\": \"123456\"\n}"
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var json = pm.response.json();",
+                            "pm.environment.set('token', json.token);"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Auth - Me",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/users/me",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "me"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Auth - Logout",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/users/logout",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "logout"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Video - Upload",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/videos/upload",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "videos",
+                        "upload"
+                    ]
+                },
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "video",
+                            "type": "file",
+                            "src": ""
+                        },
+                        {
+                            "key": "title",
+                            "value": "Test Video",
+                            "type": "text"
+                        },
+                        {
+                            "key": "description",
+                            "value": "Demo upload",
+                            "type": "text"
+                        }
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var json = pm.response.json();",
+                            "pm.environment.set('id', json.id);"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Video - Get All",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{BASE_URL}}/api/videos",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "videos"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Video - Get By ID",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{BASE_URL}}/api/videos/{{id}}",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "videos",
+                        "{{id}}"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Video - Update",
+            "request": {
+                "method": "PATCH",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/videos/{{id}}",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "videos",
+                        "{{id}}"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"title\": \"Updated Title\"\n}"
+                }
+            }
+        },
+        {
+            "name": "Video - Delete",
+            "request": {
+                "method": "DELETE",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/videos/{{id}}",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "videos",
+                        "{{id}}"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Video - View Count",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "{{BASE_URL}}/api/videos/{{id}}/view",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "videos",
+                        "{{id}}",
+                        "view"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "User - Get Videos",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{BASE_URL}}/api/users/parth123/videos",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "parth123",
+                        "videos"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "User - Regenerate Stream Key",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/users/streamkey/regenerate",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "streamkey",
+                        "regenerate"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var json = pm.response.json();",
+                            "pm.environment.set('streamKey', json.streamKey);"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Live - Stats",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{BASE_URL}}/api/videos/live/{{streamKey}}/stats",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "videos",
+                        "live",
+                        "{{streamKey}}",
+                        "stats"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Webhook - Processing Done",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{BASE_URL}}/api/webhooks/processing-done",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "webhooks",
+                        "processing-done"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"id\": \"{{id}}\",\n  \"status\": \"Ready\",\n  \"hlsUrl\": \"http://test.com/video.m3u8\",\n  \"thumbnailUrl\": \"http://test.com/thumb.jpg\",\n  \"duration\": \"10:00\"\n}"
+                }
+            }
+        },
+        {
+            "name": "Webhook - Stream Start",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "{{BASE_URL}}/api/webhooks/stream-start",
+                    "host": [
+                        "{{BASE_URL}}"
+                    ],
+                    "path": [
+                        "api",
+                        "webhooks",
+                        "stream-start"
+                    ]
+                },
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "name",
+                            "value": "{{streamKey}}",
+                            "type": "text"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

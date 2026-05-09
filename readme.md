@@ -344,3 +344,47 @@ If you want, this README can be extended with:
 - local + production deployment modes
 - complete request/response examples for each endpoint
 - diagrams for sequence-level upload and live workflows
+
+## Performance Testing
+
+This repository includes results from an Artillery stress test (total 3000 requests). Summary of key metrics:
+
+- Total requests: 3000
+- Successful (HTTP 200): 3000
+- Failures: 0
+- Sustained throughput: 50 requests/sec
+- Median response time: 5 ms
+- Mean response time: 148 ms
+- p95: 25 ms
+- p99: 3464 ms
+- Max response time: 5283 ms
+- Total downloaded bytes: 3.1 MB
+
+Interpretation:
+
+- The system handled a continuous load of 50 req/s and completed all requests successfully.
+- Most users (95%) experienced very low latency (<= 25 ms).
+- A small fraction (~1%) of requests experienced high latency (up to ~3.4 s), with a maximum observed ~5.3 s.
+
+Likely causes for high-tail latency include slow database queries, cold starts or lazy-loading, locking/concurrency issues, heavy processing paths (video-related logic), or Node.js garbage collection pauses.
+
+Recommendations:
+
+- Add application tracing / APM to identify slow code paths and database queries.
+- Review slow query logs and add indexing or query optimizations where needed.
+- Ensure worker-heavy operations are offloaded to background jobs and scale worker instances horizontally if necessary.
+- Add health checks and connection pooling for DB and external services.
+- Reproduce p99 spikes with targeted experiments and profile the affected code paths.
+
+## Repository / GitHub
+
+Contributing:
+
+- Contributions are welcome. Please fork the repository, create a feature branch, and open a pull request against `main` with a clear description of changes.
+- Include tests or manual verification steps for behavior-changing changes.
+
+License:
+
+- No license file is included in this repository. Add a `LICENSE` file to clarify usage and contribution terms (for example, MIT, Apache-2.0, or another SPDX-identified license).
+
+If you want, I can add a `CONTRIBUTING.md` or create a `LICENSE` file for you—tell me which license you prefer.

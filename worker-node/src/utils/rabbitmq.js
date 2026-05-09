@@ -9,7 +9,7 @@ export const consumeQueue = async (queueName, processingFunction) => {
 
   await channel.assertQueue(queueName, { durable: true });
 
-  // 🔒 CPU SAFETY LOCK
+  // CPU SAFETY LOCK
   channel.prefetch(RABBITMQ.PREFETCH_COUNT);
 
   console.log(`Waiting for messages in ${queueName}`);
